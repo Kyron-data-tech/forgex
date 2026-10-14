@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="page-header">
+  <h1 class="page-title">Create New RPA Job</h1>
+  <p class="page-subtitle">Configure subject research and prepare biographical facts for review.</p>
+</div>
+
+<div style="display:grid; grid-template-columns:1.8fr 1fr; gap:2rem;">
+  <!-- Job Form -->
+  <div class="card">
+    <h2 class="card-title">Job Parameters</h2>
+    <form id="new-job-form">
+      <div class="form-group">
+        <label for="workflow_name">Workflow Plugin</label>
+        <select id="workflow_name" name="workflow_name" class="form-control">
+          {% for wf in workflows %}
+            <option value="{{ wf.name }}">{{ wf.title }} ({{ wf.name }})</option>
+          {% endfor %}
+        </select>
+        <div class="form-help">Plug-in determines target platform automation and field mappings.</div>
+      </div>
+
+      <div class="form-group">
+        <label for="content_type">Content Type</label>
+        <select id="content_type" name="content_type" class="form-control">
+          <option value="Hero">Hero Nomination (Full Biography & Photo)</option>
+          <option value="Story">Story / Testimonial</option>
+          <option value="Blog">Blog Article</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="subject_name">Person / Subject Name</label>
+        <input type="text" id="subject_name" name="subject_name" class="form-control" placeholder="e.g. Ada Lovelace, Andrei Sakharov, Jane Goodall" required autofocus>
+        <div class="form-help">Will be searched across Wikipedia REST API and Wikimedia Commons.</div>
+      </div>
+
+      <div class="form-group">
+        <label for="work_date">Date of Work</label>
+        <input type="date" id="work_date" name="work_date" class="form-control" required>
+        <div class="form-help">Calendar date associated with this entry.</div>
+      </div>
+
+      <div class="form-group">
+        <label for="notes">Editorial Notes & Custom Angle (Optional)</label>
+        <textarea id="notes" name="notes" class="form-control" placeholder="Add specific milestones, quotes, or personal connection you want featured in this entry..."></textarea>
+      </div>
+
+      <div style="display:flex; justify-content:flex-end;">
+        <button type="submit" id="btn-submit-job" class="btn btn-primary">
+          🚀 Start Research & Prepare
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Quick Info Column -->
+  <div>
+    <div class="card">
+      <h3 class="card-title" style="font-size:1.1rem;">How It Works</h3>
+      <ol style="margin-left:1.25rem; font-size:0.88rem; color:#94a3b8; line-height:1.6;">
+        <li><strong style="color:#f8fafc;">Intelligence Gathering:</strong> Queries Wikipedia for birth/death, nationality, achievements, and extracts Wikimedia Commons photos.</li>
+        <li><strong style="color:#f8fafc;">Human Review Gate:</strong> You review the mapped facts, select the highest-rated image (with CC license provenance), or upload your own.</li>
+        <li><strong style="color:#f8fafc;">Dry Run Verification:</strong> Simulates filling forms in Playwright, capturing a screenshot without submitting.</li>
+        <li><strong style="color:#f8fafc;">Approval & Publish:</strong> Posts to worldheros.com only after your explicit confirmation.</li>
+      </ol>
+    </div>
+
+    <div class="card">
+      <h3 class="card-title" style="font-size:1.1rem;">💡 Quick Suggestions</h3>
+      <div style="display:flex; flex-direction:column; gap:0.5rem; font-size:0.85rem;">
+        <button type="button" class="btn btn-secondary btn-small" onclick="fillSuggestion('Marie Curie', 'Hero')">Marie Curie (Physicist)</button>
+        <button type="button" class="btn btn-secondary btn-small" onclick="fillSuggestion('Ada Lovelace', 'Hero')">Ada Lovelace (Computer Scientist)</button>
+        <button type="button" class="btn btn-secondary btn-small" onclick="fillSuggestion('Andrei Sakharov', 'Hero')">Andrei Sakharov (Physicist & Nobel Peace)</button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script type="module">
+  import { initNewJobPage } from '/static/js/app.js';
+  initNewJobPage();
+
+  // Set today's date as default
+  const dateInput = document.getElementById('work_date');
+  if (dateInput && !dateInput.value) {
+    dateInput.value = new Date().toISOString().split('T')[0];
+  }
+
+  window.fillSuggestion = function(name, type) {
+    document.getElementById('subject_name').value = name;
+    document.getElementById('content_type').value = type;
+  };
+</script>
+{% endblock %}

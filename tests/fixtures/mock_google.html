@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Google Mock Search</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; background: #fff; }
+        .search-container { max-width: 600px; margin: 0 auto; text-align: center; }
+        textarea[name="q"] { width: 100%; height: 44px; padding: 10px 16px; border-radius: 24px; border: 1px solid #dfe1e5; font-size: 16px; }
+        button { padding: 10px 20px; border-radius: 4px; border: 1px solid #f8f9fa; background: #f8f9fa; cursor: pointer; margin-top: 15px; }
+        .ai-overview { margin-top: 30px; text-align: left; padding: 20px; background: #f0f7ff; border-radius: 12px; border: 1px solid #c2e7ff; }
+        .organic-result { margin-top: 25px; text-align: left; }
+        .organic-result h3 { color: #1a0dab; margin-bottom: 4px; }
+    </style>
+</head>
+<body>
+    <div class="search-container">
+        <h2>Google</h2>
+        <form id="search-form">
+            <textarea name="q" aria-label="Search" placeholder="Search Google..."></textarea>
+            <br>
+            <button type="submit">Google Search</button>
+        </form>
+
+        <div id="results-area" style="display: none;">
+            <div class="ai-overview" data-attrid="wa:/g/11v3fv118k" aria-label="AI Overview">
+                <strong>AI Overview</strong>
+                <p id="ai-text">Marie Curie was a pioneering physicist and chemist who conducted groundbreaking research on radioactivity. She was the first woman to win a Nobel Prize and the only woman to win Nobel Prizes in two scientific fields.</p>
+                <button type="button" id="show-more-btn" aria-label="Show more">Show more</button>
+                <div id="extra-ai" style="display: none; margin-top: 10px;">
+                    Curie discovered two new elements, polonium and radium, in 1898. During World War I, she developed mobile radiography units known as petroleuses to provide X-ray services to field hospitals.
+                </div>
+            </div>
+
+            <div class="organic-result" id="search">
+                <div class="g">
+                    <a href="mock_article.html" class="result-link">
+                        <h3>Marie Curie Biography & Discoveries - Britannica</h3>
+                    </a>
+                    <p>Marie Curie, Polish-born French physicist, famous for her work on radioactivity and twice a winner of the Nobel Prize.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('search-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            document.getElementById('results-area').style.display = 'block';
+        });
+
+        document.getElementById('show-more-btn').addEventListener('click', () => {
+            document.getElementById('extra-ai').style.display = 'block';
+            document.getElementById('show-more-btn').style.display = 'none';
+        });
+
+        // If query parameter 'q' is in URL, auto-show results
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.has('q')) {
+            document.querySelector('textarea[name="q"]').value = urlParams.get('q');
+            document.getElementById('results-area').style.display = 'block';
+        }
+    </script>
+</body>
+</html>

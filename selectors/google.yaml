@@ -1,0 +1,59 @@
+# Selectors for Google Search with multi-fallback resilience.
+#
+# IMPORTANT: All selectors here must be valid standard CSS or Playwright role/aria
+# selectors. Playwright-only pseudo-classes like :has-text() and :has() work in
+# page.locator() calls but MUST NOT appear in selectors that are passed to
+# page.evaluate() / document.querySelector(). The tools layer now routes all
+# copy operations through element_handle(), so :has-text() is safe in locator()
+# contexts (detect + click), but we keep these selectors CSS-valid for safety.
+
+search_box:
+  - "textarea[name='q']"
+  - "input[name='q']"
+  - "[aria-label='Search']"
+  - "[role='combobox'][aria-label*='Search']"
+
+search_button:
+  - "input[name='btnK']"
+  - "button[aria-label='Google Search']"
+  - "input[value='Google Search']"
+
+# AI Overview detection — all standard CSS / attribute selectors only.
+# Google changes its DOM structure frequently; ordering = most reliable first.
+ai_overview_container:
+  - "[data-attrid='wa:/g/11v3fv118k']"
+  - "[aria-label='AI Overview']"
+  - "div[data-md='100']"
+  - ".M8OgIe"
+  - "div[jsname='yEVEwb']"
+  - "c-wiz[data-p*='AI']"
+
+ai_overview_show_more:
+  - "[aria-label='Show more']"
+  - "button[jsname='R9oPif']"
+  - "button[jsname]"
+
+# Sibling text content under AI Overview wrapper.
+ai_overview_text:
+  - "[data-attrid='wa:/g/11v3fv118k'] div[data-content-feature='1']"
+  - ".M8OgIe"
+  - "div[data-md='100'] div"
+
+featured_snippet:
+  - "[data-attrid='FeaturedSnippet']"
+  - ".c2xzTb"
+  - "div[data-tts='answers']"
+  - ".hgKElc"
+
+organic_results:
+  - "#search .g"
+  - "#rso > div"
+  - "div[data-hveid] a[jsname]"
+
+result_title_link:
+  - "h3"
+  - "a h3"
+
+captcha_detected:
+  - "form#captcha-form"
+  - "iframe[src*='recaptcha']"

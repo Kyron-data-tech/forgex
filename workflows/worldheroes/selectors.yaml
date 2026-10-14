@@ -1,0 +1,127 @@
+# Verified Live Selectors for https://worldheros.com/
+# Extracted directly from live authenticated page structure.
+
+site:
+  base_url: "https://worldheros.com"
+  signin_url: "https://worldheros.com/signin"
+  nominate_url: "https://worldheros.com/nominate"
+  categories_url: "https://worldheros.com/categories"
+
+auth:
+  # Signin form
+  email_input: "#s-email, input[name='email'], input[type='email']"
+  password_input: "#s-pass, input[name='password'], input[type='password']"
+  submit_btn: "button[type='submit']:has-text('Sign in'), button[type='submit']"
+  # Indicators that we ARE logged in (nav shows account/signout links or user profile menu)
+  logged_in_indicator: "a[href='/signout'], form[action='/signout'], a:has-text('Sign out'), a:has-text('My account'), a:has-text('amrat'), .user-menu"
+  # Indicators that we are NOT logged in
+  signin_prompt: ".signin-prompt, a[href*='/signin?next=']"
+
+nomination:
+  # Form container
+  form: ".stack-form, form[action='/nominate'], form"
+
+  # Ready indicator (visible input to wait for)
+  ready_indicator: "#n-name, input[name='name'], .stack-form input:not([type='hidden'])"
+
+  # Hero name
+  name_field: "#n-name, input[name='name'], input[placeholder*='name' i]"
+
+  # Category dropdown (name='category_id', id='n-category')
+  category_select: "#n-category, select[name='category_id'], select[name='category'], select"
+
+  # Country
+  country_field: "#n-country, input[name='country'], input[placeholder*='country' i]"
+
+  # Birth year
+  birth_year_field: "#n-born, input[name='birth_year'], input[name='born']"
+
+  # Death year
+  death_year_field: "#n-died, input[name='death_year'], input[name='died']"
+
+  # Tagline / Describe them in one line
+  tagline_field: "#n-tagline, input[name='tagline'], input[placeholder*='one line' i], input[placeholder*='Taught' i]"
+
+  # Summary / Why are they a hero?
+  summary_field: "#n-summary, textarea[name='summary'], textarea[placeholder*='sentences' i]"
+
+  # Story / Their story
+  story_field: "#n-story, textarea[name='story'], textarea[placeholder*='story' i]"
+
+  # Source URL / A link where we can read more
+  source_url_field: "#n-source, input[name='source_url'], input[name='source'], input[name='attribution'], input[placeholder*='https://' i]"
+
+  # Image upload (id='member-images', name='images', type='file')
+  image_upload: "#member-images, input[name='images'][type='file'], input[type='file'][accept*='image'], input[type='file']"
+
+  # Submit button
+  submit_btn: "button[type='submit']:has-text('Send nomination'), .stack-form button[type='submit'], button:has-text('Send nomination'), button[type='submit']"
+
+categories:
+  - id: "1"
+    slug: "leaders"
+    label: "Leaders"
+  - id: "2"
+    slug: "entrepreneurs"
+    label: "Entrepreneurs"
+  - id: "3"
+    slug: "scientists"
+    label: "Scientists"
+  - id: "4"
+    slug: "athletes"
+    label: "Athletes"
+  - id: "5"
+    slug: "artists"
+    label: "Artists"
+  - id: "6"
+    slug: "humanitarians"
+    label: "Humanitarians"
+  - id: "7"
+    slug: "unsung-heroes"
+    label: "Unsung Heroes"
+  - id: "8"
+    slug: "historical-heroes"
+    label: "Historical Heroes"
+
+admin:
+  base_url: "https://worldheros.com/admin"
+  login_url: "https://worldheros.com/admin/login"
+  auth:
+    username_input: "#u, input[name='username']"
+    password_input: "#p, input[name='password']"
+    submit_btn: "button[type='submit']"
+    logged_in_indicator: "a[href*='/admin/heroes'], a[href*='/admin/blog'], a[href*='/admin/logout']"
+  hero:
+    new_url: "https://worldheros.com/admin/heroes/new"
+    # Confirmed field IDs from live /admin/heroes/new inspection
+    name_input: "#h-name, input[name='name'][data-slug-source]"
+    slug_input: "#h-slug, input[name='slug'][data-slug-target]"
+    category_select: "#h-category, select[name='category_id']"
+    tagline_input: "#h-tagline, input[name='tagline']"
+    country_input: "#h-country, input[name='country']"
+    birth_year_input: "#h-born, input[name='birth_year']"
+    death_year_input: "#h-died, input[name='death_year']"
+    summary_input: "#h-summary, textarea[name='summary']"
+    biography_input: "#h-bio, textarea[name='biography']"   # NOTE: biography, not story
+    source_url_input: "input[name='sources[0][url]']"
+    source_title_input: "input[name='sources[0][title]']"
+    image_upload: "#h-photo, input[name='photo'][type='file']"
+    # "Save" button (stays on page after save) — NOT the "Save and add another"
+    submit_btn: "button[type='submit'][value='stay'], button.btn-block[type='submit']:not(.btn-ghost), button[type='submit']"
+  blog:
+    new_url: "https://worldheros.com/admin/blog/new"
+    # Confirmed field IDs from live /admin/blog/new inspection
+    title_input: "#f-title, input[name='title']"
+    author_name_input: "#f-author_name, input[name='author_name']"
+    slug_input: "#f-slug, input[name='slug']"
+    summary_input: "#f-summary, textarea[name='summary']"
+    body_input: "#f-body, textarea[name='body']"
+    source_links_input: "#f-source_links, textarea[name='source_links']"
+    image_upload: "#photo, input[name='photo'][type='file']"
+    submit_btn: "button.btn[type='submit']"
+  story:
+    # NOTE: /admin/story/new returns 403 — stories are community-submitted and reviewed only.
+    # Story creation through the admin panel is NOT supported on worldheros.com.
+    # Use Hero content type for admin direct publishing.
+    new_url: "https://worldheros.com/admin/stories"
+    supported: false

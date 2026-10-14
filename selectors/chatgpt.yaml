@@ -1,0 +1,50 @@
+# Selectors for ChatGPT Web interface with multi-fallback resilience
+composer:
+  - "#prompt-textarea"
+  - "div[contenteditable='true'][id='prompt-textarea']"
+  - "div[contenteditable='true']"
+  - "textarea[placeholder*='Message ChatGPT']"
+  - "textarea[data-id='root']"
+
+send_button:
+  - "button[data-testid='send-button']"
+  - "button[aria-label='Send prompt']"
+  - "button:has-text('Send')"
+  - "button:has(svg path[d*='M.5 1.163'])"
+
+stop_button:
+  - "button[data-testid='stop-button']"
+  - "button[aria-label='Stop streaming']"
+  - "button:has-text('Stop generating')"
+
+new_chat_button:
+  - "a[href='/']"
+  - "button:has-text('New chat')"
+  - "[data-testid='new-chat-button']"
+  - "a[data-testid='navigation-new-chat-button']"
+
+temp_chat_toggle:
+  - "button:has-text('Temporary chat')"
+  - "[data-testid='temporary-chat-toggle']"
+  - "button[aria-label*='Temporary chat']"
+
+last_assistant_turn:
+  - "[data-message-author-role='assistant']"
+  - "div[data-testid*='conversation-turn-assistant']"
+  - ".agent-turn"
+
+code_block:
+  - "pre code"
+  - "pre"
+
+login_required:
+  - "button:has-text('Log in')"
+  - "a[href*='/login']"
+  - "text='Welcome back'"
+  - "button:has-text('Sign up')"
+
+cloudflare_or_captcha:
+  - "#cf-wrapper"
+  - "iframe[src*='challenges.cloudflare.com']"
+  - "text='Verify you are human'"
+  - "text='Cloudflare'"

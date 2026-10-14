@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>ForgeX Operator Test Page</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 40px;
+            font-family: sans-serif;
+            background: #f8fafc;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+        input, select, button {
+            display: block;
+            width: 100%;
+            margin-bottom: 20px;
+            padding: 12px;
+            font-size: 16px;
+            border-radius: 8px;
+            border: 1px solid #cbd5e1;
+            box-sizing: border-box;
+        }
+        button {
+            background: #2563eb;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+        }
+        .stats {
+            background: #f1f5f9;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: monospace;
+            font-size: 13px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Operator Pointer Fixture</h2>
+        <input id="sample-input" type="text" placeholder="Type name here...">
+        <select id="sample-select">
+            <option value="">Choose category...</option>
+            <option value="scientists">Scientists</option>
+            <option value="humanitarians">Humanitarians</option>
+            <option value="leaders">Leaders</option>
+        </select>
+        <button id="sample-button">Click Target Button</button>
+        <div id="result-box" style="display: none; color: green; font-weight: bold; margin-bottom: 15px;">Action Triggered!</div>
+        <div class="stats">
+            <div>Click Count: <span id="click-count">0</span></div>
+            <div>Mousemove Points Logged: <span id="move-count">0</span></div>
+            <div>Last Value Typed: <span id="typed-value">none</span></div>
+        </div>
+    </div>
+
+    <script>
+        window.__mouse_history = [];
+        let clicks = 0;
+        let moves = 0;
+
+        document.addEventListener('mousemove', (e) => {
+            moves++;
+            window.__mouse_history.push({x: e.clientX, y: e.clientY});
+            document.getElementById('move-count').textContent = moves;
+        });
+
+        document.getElementById('sample-button').addEventListener('click', () => {
+            clicks++;
+            document.getElementById('click-count').textContent = clicks;
+            document.getElementById('result-box').style.display = 'block';
+        });
+
+        document.getElementById('sample-input').addEventListener('input', (e) => {
+            document.getElementById('typed-value').textContent = e.target.value;
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,15 @@
+# Resilient UI locators for the target website
+# Prefer aria-label, role, text, placeholder over volatile CSS classes
+
+login:
+  url: "https://example.com/login"
+  user_input: "input[type='email']"
+  password_input: "input[type='password']"
+  submit_btn: "button[type='submit']"
+
+submission:
+  create_url: "https://example.com/posts/new"
+  title_field: "input[name='title']"
+  body_field: "textarea[name='content']"
+  file_upload: "input[type='file']"
+  submit_btn: "button:has-text('Publish')"

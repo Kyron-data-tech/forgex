@@ -1,0 +1,74 @@
+# =============================================================================
+# TaskForge RPA Studio — .gitignore
+# =============================================================================
+
+# ── Python ────────────────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyo
+*.pyd
+.Python
+
+# ── Virtual environments ──────────────────────────────────────────────────────
+.venv/
+venv/
+env/
+ENV/
+.env.local
+
+# ── Tests & coverage ──────────────────────────────────────────────────────────
+.pytest_cache/
+.coverage
+htmlcov/
+*.cover
+coverage.xml
+.tox/
+
+# ── Secrets & credentials ─────────────────────────────────────────────────────
+# Keep .env.example (safe template); NEVER commit .env (contains real secrets)
+.env
+
+# ── Database ──────────────────────────────────────────────────────────────────
+*.sqlite
+*.sqlite3
+*.db
+
+# ── Logs ─────────────────────────────────────────────────────────────────────
+logs/
+*.log
+
+# ── Browser profile (Chrome session data, cookies, credentials) ─────────────
+.browser-profile/
+.chrome-profile/
+
+
+# ── User data & generated content ─────────────────────────────────────────────
+# All downloaded images, screenshots, sidecar JSON, optimised upload copies
+data_storage/
+
+# ── Temp / upload optimization artefacts ─────────────────────────────────────
+*_upload.jpg
+*_upload.png
+*.tmp
+
+# ── OS junk ──────────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+desktop.ini
+ehthumbs.db
+
+# ── IDE / editor ──────────────────────────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.project
+.settings/
+
+# ── Build / dist ─────────────────────────────────────────────────────────────
+dist/
+build/
+*.egg-info/
+.eggs/

@@ -1,0 +1,181 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="page-header" style="display:flex; justify-content:space-between; align-items:center;">
+  <div>
+    <h1 class="page-title">Review & Approval: {{ job.subject_name }}</h1>
+    <p class="page-subtitle">Mandatory human-in-the-loop gate. Inspect facts, select the verified photo, and simulate before posting.</p>
+  </div>
+  <div style="display:flex; gap:0.75rem;">
+    <button id="btn-save-review" class="btn btn-secondary">💾 Save Edits</button>
+    <button id="btn-dry-run" class="btn btn-secondary">🔍 Run Dry Run</button>
+    <button id="btn-approve-publish" class="btn btn-success" {% if job.status != 'DRY_RUN_PASSED' %}disabled{% endif %}>
+      🚀 Approve & Publish
+    </button>
+  </div>
+</div>
+
+{% set review = job.get_review() %}
+{% set candidates = job.get_candidate_images() %}
+
+<div class="review-grid">
+  <!-- Left Column: Editable Mapped Biography Fields -->
+  <div class="card">
+    <h2 class="card-title">Biographical Data & Story Content</h2>
+    <form id="review-form">
+      <div class="form-group">
+        <label for="f-name">Hero Name</label>
+        <input type="text" id="f-name" name="name" class="form-control" value="{{ review.get('name', job.subject_name) }}">
+      </div>
+
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
+        <div class="form-group">
+          <label for="f-category">Category</label>
+          <select id="f-category" name="category" class="form-control">
+            <option value="leaders" {% if review.get('category') == 'leaders' %}selected{% endif %}>Leaders</option>
+            <option value="entrepreneurs" {% if review.get('category') == 'entrepreneurs' %}selected{% endif %}>Entrepreneurs</option>
+            <option value="scientists" {% if review.get('category') == 'scientists' %}selected{% endif %}>Scientists</option>
+            <option value="athletes" {% if review.get('category') == 'athletes' %}selected{% endif %}>Athletes</option>
+            <option value="artists" {% if review.get('category') == 'artists' %}selected{% endif %}>Artists</option>
+            <option value="humanitarians" {% if review.get('category') == 'humanitarians' %}selected{% endif %}>Humanitarians</option>
+            <option value="unsung-heroes" {% if review.get('category') == 'unsung-heroes' %}selected{% endif %}>Unsung Heroes</option>
+            <option value="historical-heroes" {% if review.get('category') == 'historical-heroes' %}selected{% endif %}>Historical Heroes</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="f-country">Country / Nationality</label>
+          <input type="text" id="f-country" name="country" class="form-control" value="{{ review.get('country', '') }}">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="f-tagline">Describe them in one line <span style="font-size:0.75rem; color:#94a3b8;">(Max 220 chars)</span></label>
+        <input type="text" id="f-tagline" name="tagline" maxlength="220" class="form-control" value="{{ review.get('tagline', '') }}" placeholder="For example: Taught every child in her village to read">
+        <div class="form-help">Crisp, inspiring one-line hook of their defining heroic impact.</div>
+      </div>
+
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
+        <div class="form-group">
+          <label for="f-birth">Year born</label>
+          <input type="text" id="f-birth" name="birth" maxlength="5" class="form-control" value="{{ review.get('birth', '') }}" placeholder="e.g. 1928">
+        </div>
+        <div class="form-group">
+          <label for="f-death">Year died <span style="font-size:0.75rem; color:#94a3b8;">(optional)</span></label>
+          <input type="text" id="f-death" name="death" maxlength="5" class="form-control" value="{{ review.get('death', '') }}" placeholder="e.g. 2014">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="f-summary">Why are they a hero? <span style="font-size:0.75rem; color:#94a3b8;">(Max 600 chars)</span></label>
+        <textarea id="f-summary" name="summary" maxlength="600" class="form-control" style="min-height:95px;">{{ review.get('summary', '') }}</textarea>
+        <div class="form-help">A few sentences explaining their courage, adversity overcome, and who they helped.</div>
+      </div>
+
+      <div class="form-group">
+        <label for="f-story">Their story <span style="font-size:0.75rem; color:#94a3b8;">(Max 8,000 chars)</span></label>
+        <textarea id="f-story" name="story" maxlength="8000" class="form-control" style="min-height:220px;">{{ review.get('story', '') }}</textarea>
+        <div class="form-help">Full biographical narrative: what they did, when, and who it helped.</div>
+      </div>
+
+      <div class="form-group">
+        <label for="f-source-url">A link where we can read more <span style="font-size:0.75rem; color:#94a3b8;">(Max 500 chars)</span></label>
+        <input type="url" id="f-source-url" name="source_url" maxlength="500" class="form-control" value="{{ review.get('source_url', '') }}" placeholder="https://en.wikipedia.org/wiki/...">
+        <div class="form-help">Canonical web link for further reading (must start with https://).</div>
+      </div>
+
+      <div class="form-group">
+        <label for="f-attribution">Attribution / Source</label>
+        <input type="text" id="f-attribution" name="attribution" class="form-control" value="{{ review.get('attribution', 'Source: Wikipedia (CC BY-SA 4.0)') }}">
+        <div class="form-help">Mandatory copyright / provenance attribution for data tracking.</div>
+      </div>
+    </form>
+  </div>
+
+  <!-- Right Column: Sourced Candidate Images & Upload -->
+  <div>
+    <div class="card">
+      <h2 class="card-title">Candidate Images (Wikimedia Commons)</h2>
+      <p style="color:#94a3b8; font-size:0.85rem; margin-bottom:0.75rem;">
+        Ranked by resolution and global wiki usage. Select one to download and attach with sidecar metadata.
+      </p>
+
+      {% if candidates %}
+        <div class="image-candidate-grid">
+          {% for img in candidates %}
+            <div class="image-card {% if job.selected_image_index == loop.index0 %}selected{% endif %}" data-index="{{ loop.index0 }}">
+              {% if loop.first and job.selected_image_index == 0 %}
+                <div style="position:absolute; top:8px; right:8px; z-index:2;">
+                  <span class="badge badge-passed" style="box-shadow:0 2px 8px rgba(0,0,0,0.4);">Bot Pick</span>
+                </div>
+              {% endif %}
+              <img src="{{ img.thumb_url or img.url }}" class="image-thumb" alt="{{ img.title }}" loading="lazy">
+              <div class="image-info">
+                <span class="image-badge {% if img.is_open_license %}open{% endif %}">{{ img.license }}</span>
+                <div style="font-weight:600; margin-top:0.25rem;">{{ img.width }} × {{ img.height }} px</div>
+                <div style="color:#94a3b8; font-size:0.75rem;">Author: {{ img.author }}</div>
+                <div style="color:#94a3b8; font-size:0.75rem;">Global Usage: {{ img.usage_count }} wikis</div>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div style="padding:1.5rem; text-align:center; color:#94a3b8; background:var(--bg-primary); border-radius:8px;">
+          No direct photos found in Wikimedia Commons. Please upload a custom photo below.
+        </div>
+      {% endif %}
+    </div>
+
+    <!-- Custom Image Upload -->
+    <div class="card">
+      <h3 class="card-title" style="font-size:1.05rem;">Upload Custom Image (Optional Override)</h3>
+      <form id="custom-upload-form">
+        <div class="form-group">
+          <label for="custom-file-input">Select Image File (Max 10 MB)</label>
+          <input type="file" id="custom-file-input" class="form-control" accept="image/jpeg,image/png,image/webp" required>
+        </div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.75rem;">
+          <div class="form-group">
+            <label for="custom-license-input">License</label>
+            <input type="text" id="custom-license-input" class="form-control" value="User Provided / Licensed">
+          </div>
+          <div class="form-group">
+            <label for="custom-author-input">Author / Photographer</label>
+            <input type="text" id="custom-author-input" class="form-control" value="User Upload">
+          </div>
+        </div>
+        <button type="submit" class="btn btn-secondary btn-small">Upload & Attach</button>
+      </form>
+    </div>
+
+    <!-- Active Attached Image Preview -->
+    <div class="card">
+      <h3 class="card-title" style="font-size:1.05rem;">Attached Photo (Automated by Bot)</h3>
+      {% if job.selected_image_path %}
+        <div style="font-size:0.85rem; color:#10b981; display:flex; flex-direction:column; gap:0.6rem;">
+          <div style="display:flex; align-items:center; gap:0.5rem;">
+            <span class="badge badge-passed">Auto-Attached</span>
+            <span style="color:#cbd5e1;">Ready for automated upload</span>
+          </div>
+          <div style="border-radius:8px; overflow:hidden; border:1px solid var(--border); max-height:220px; background:#000; text-align:center;">
+            <img src="/media/{{ job.person_slug }}/{{ job.selected_image_path.replace('\\', '/').split('/')[-1] }}" style="max-height:220px; width:100%; object-fit:contain;" alt="Attached Photo">
+          </div>
+          <code style="display:block; margin-top:0.3rem; word-break:break-all; background:var(--bg-primary); padding:0.4rem; border-radius:4px; color:#cbd5e1; font-size:0.75rem;">
+            {{ job.selected_image_path }}
+          </code>
+        </div>
+      {% else %}
+        <div style="font-size:0.85rem; color:#f59e0b;">
+          ⚠️ No image attached. Click a candidate card above or upload an image.
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script type="module">
+  import { initReviewPage } from '/static/js/app.js';
+  initReviewPage({{ job.id }});
+</script>
+{% endblock %}

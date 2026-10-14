@@ -1,0 +1,145 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="page-header" style="display:flex; justify-content:space-between; align-items:center;">
+  <div>
+    <h1 class="page-title">Job History & Audit Trail</h1>
+    <p class="page-subtitle">Inspect completed workflows, step execution logs, screenshots, and live links.</p>
+  </div>
+  <a href="/jobs/new" class="btn btn-primary">+ New RPA Job</a>
+</div>
+
+<div class="card">
+  <div class="table-responsive">
+    <table class="table">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Subject / Hero</th>
+          <th>Workflow</th>
+          <th>Type</th>
+          <th>Work Date</th>
+          <th>Status</th>
+          <th>Live Link</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% if jobs %}
+          {% for j in jobs %}
+            <tr>
+              <td>#{{ j.id }}</td>
+              <td><strong>{{ j.subject_name }}</strong></td>
+              <td><span style="font-family:monospace; font-size:0.8rem;">{{ j.workflow_name }}</span></td>
+              <td>{{ j.content_type }}</td>
+              <td>{{ j.work_date }}</td>
+              <td>
+                {% if j.status == 'PUBLISHED' %}
+                  <span class="badge badge-published">Published</span>
+                {% elif j.status == 'DRY_RUN_PASSED' %}
+                  <span class="badge badge-passed">Dry Run Passed</span>
+                {% elif j.status == 'READY_FOR_REVIEW' %}
+                  <span class="badge badge-ready">Ready for Review</span>
+                {% elif j.status == 'FAILED' %}
+                  <span class="badge badge-failed">Failed</span>
+                {% else %}
+                  <span class="badge badge-draft">{{ j.status }}</span>
+                {% endif %}
+              </td>
+              <td>
+                {% if j.published_url %}
+                  <a href="{{ j.published_url }}" target="_blank" rel="noopener" style="font-size:0.85rem;">🔗 View Post</a>
+                {% else %}
+                  <span style="color:#64748b;">—</span>
+                {% endif %}
+              </td>
+              <td>
+                <div style="display:flex; gap:0.5rem;">
+                  <a href="/jobs/{{ j.id }}/review" class="btn btn-secondary btn-small">Review</a>
+                  <button class="btn btn-secondary btn-small" onclick="viewJobLogs({{ j.id }})">Logs</button>
+                  <button class="btn btn-secondary btn-small" style="color:#ef4444;" onclick="archiveJob({{ j.id }})">Archive</button>
+                </div>
+              </td>
+            </tr>
+          {% endfor %}
+        {% else %}
+          <tr>
+            <td colspan="8" style="text-align:center; padding:2rem; color:#94a3b8;">
+              No RPA jobs created yet. Click <a href="/jobs/new">Create New RPA Job</a> to get started.
+            </td>
+          </tr>
+        {% endif %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Modal for Job Logs & Step Screenshot -->
+<div id="logs-modal" class="modal-overlay" style="display:none;">
+  <div class="modal-content">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+      <h2 id="logs-modal-title">Job Audit Logs</h2>
+      <button class="btn btn-secondary btn-small" onclick="document.getElementById('logs-modal').style.display='none'">✕ Close</button>
+    </div>
+    <div id="logs-modal-body"></div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script type="module">
+  import { fetchWithCsrf, showToast } from '/static/js/app.js';
+
+  window.viewJobLogs = async function(jobId) {
+    try {
+      const res = await fetch(`/api/jobs/${jobId}`);
+      const data = await res.json();
+      const modal = document.getElementById('logs-modal');
+      const title = document.getElementById('logs-modal-title');
+      const body = document.getElementById('logs-modal-body');
+
+      title.innerText = `Audit Logs for #${data.id} - ${data.subject_name}`;
+      
+      let html = '';
+      if (data.dry_run_screenshot) {
+        html += `
+          <div style="margin-bottom:1rem;">
+            <strong>Dry Run Screenshot:</strong>
+            <img src="/media/screenshots/${data.dry_run_screenshot.split(/[\\/]/).pop()}" style="width:100%; border:1px solid #334155; border-radius:6px; margin-top:0.5rem; max-height:350px; object-fit:contain; background:#000;" alt="Screenshot">
+          </div>
+        `;
+      }
+
+      html += `
+        <div style="background:#0f172a; padding:1rem; border-radius:6px; font-family:monospace; font-size:0.85rem; max-height:250px; overflow-y:auto;">
+          ${(data.logs || []).map(l => `
+            <div style="margin-bottom:0.4rem;">
+              <span style="color:#94a3b8;">[${l.timestamp ? l.timestamp.split('T')[1].split('.')[0] : ''}]</span>
+              <strong style="color:${l.level === 'ERROR' ? '#ef4444' : l.level === 'WARNING' ? '#f59e0b' : '#38bdf8'};">[${l.step_name}]</strong>
+              <span>${l.message}</span>
+            </div>
+          `).join('')}
+        </div>
+      `;
+
+      body.innerHTML = html;
+      modal.style.display = 'flex';
+    } catch (e) {
+      showToast('Error loading logs: ' + e.message, 'error');
+    }
+  };
+
+  window.archiveJob = async function(jobId) {
+    if (!confirm(`Are you sure you want to archive Job #${jobId}?`)) return;
+    try {
+      const res = await fetchWithCsrf(`/api/jobs/${jobId}/archive`, { method: 'POST' });
+      if (res.ok) {
+        showToast('Job archived.', 'info');
+        window.location.reload();
+      }
+    } catch (e) {
+      showToast(e.message, 'error');
+    }
+  };
+</script>
+{% endblock %}
