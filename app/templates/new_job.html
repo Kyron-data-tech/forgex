@@ -1,9 +1,15 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="page-header">
-  <h1 class="page-title">Create New RPA Job</h1>
-  <p class="page-subtitle">Configure subject research and prepare biographical facts for review.</p>
+<div class="page-header" style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 15px;">
+  <div>
+    <h1 class="page-title">Create New RPA Job</h1>
+    <p class="page-subtitle">Configure subject research and prepare biographical facts for review.</p>
+  </div>
+  <a href="/agent" class="btn btn-primary" style="display: flex; align-items: center; gap: 8px; text-decoration: none;">
+    <span>⚡ Launch in Operator Agent (Multi-Tab Chrome)</span>
+    <span>↗</span>
+  </a>
 </div>
 
 <div style="display:grid; grid-template-columns:1.8fr 1fr; gap:2rem;">

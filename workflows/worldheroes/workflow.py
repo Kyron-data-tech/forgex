@@ -447,6 +447,28 @@ class WorldHeroesWorkflow(Workflow):
             except Exception as e:
                 logs.append(f"⚠ Category selection note: {e}")
 
+            # Status: published (ensures hero appears live on the site)
+            status_sel = form_cfg.get("status_select", "#h-status, select[name='status']")
+            try:
+                st_loc = page.locator(status_sel).first
+                if await st_loc.count() > 0:
+                    await st_loc.select_option(value="published")
+                    fields_filled["status"] = "published"
+                    logs.append("✓ Status selected: published")
+            except Exception as e:
+                logs.append(f"⚠ Status selection note: {e}")
+
+            # Photo credit
+            credit_sel = "#h-credit, input[name='photo_credit']"
+            photo_credit_val = data.get("photo_credit") or "Wikimedia Commons"
+            try:
+                c_loc = page.locator(credit_sel).first
+                if await c_loc.count() > 0:
+                    await c_loc.fill(photo_credit_val[:180])
+                    fields_filled["photo_credit"] = photo_credit_val
+            except Exception:
+                pass
+
         elif content_type in ("Blog", "Story"):
             content_val = str(data.get("story") or data.get("content") or "")[:7900]
             summary_val = str(data.get("summary", ""))[:580]
@@ -472,6 +494,17 @@ class WorldHeroesWorkflow(Workflow):
                     fields_filled["category"] = category_slug or cat_id
                     logs.append(f"✓ Category selected: {cat_id}")
             except Exception as e:
+                pass
+
+            # Blog status: published
+            b_status_sel = "#status, select[name='status']"
+            try:
+                b_st_loc = page.locator(b_status_sel).first
+                if await b_st_loc.count() > 0:
+                    await b_st_loc.select_option(value="published")
+                    fields_filled["status"] = "published"
+                    logs.append("✓ Blog status selected: published")
+            except Exception:
                 pass
 
         # Image attachment

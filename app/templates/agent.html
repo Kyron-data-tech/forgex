@@ -63,12 +63,30 @@
           </div>
 
           <!-- Admin Mode Indicator -->
-          <div style="display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; background: rgba(99, 102, 241, 0.12); border: 1px solid rgba(99, 102, 241, 0.3); border-radius: 6px; font-size: 0.8rem; margin-top: 6px;">
-            <div style="display: flex; align-items: center; gap: 6px; color: #a5b4fc;">
-              <span style="font-size: 0.9rem;">⚡</span>
-              <span><strong>Admin Direct Publish Mode:</strong> Bot logs into Admin to directly publish live content.</span>
+          <div style="display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; background: rgba(99, 102, 241, 0.12); border: 1px solid rgba(99, 102, 241, 0.3); border-radius: 8px; font-size: 0.82rem; margin-top: 8px;">
+            <div style="display: flex; align-items: center; gap: 8px; color: #a5b4fc;">
+              <span style="font-size: 1.1rem;">⚡</span>
+              <span><strong>Admin Direct Publish Mode:</strong> Bot logs in with verified admin credentials and directly publishes live.</span>
             </div>
             <a href="https://worldheros.com/admin" target="_blank" style="color: #818cf8; font-weight: 600; text-decoration: underline;">Admin Panel ↗</a>
+          </div>
+
+          <!-- Multi-Tab Search Capability Pill -->
+          <div style="display: flex; align-items: center; gap: 8px; padding: 8px 12px; background: rgba(6, 182, 212, 0.1); border: 1px solid rgba(6, 182, 212, 0.25); border-radius: 8px; font-size: 0.78rem; margin-top: 8px; color: #67e8f9;">
+            <span>🌐</span>
+            <span><strong>Multi-Tab Chrome Research:</strong> Opens separate visible tabs for Wikipedia deep dives, targeted Google queries, and authoritative primary sources.</span>
+          </div>
+
+          <!-- Auto-Publish Toggle Pill -->
+          <div style="display: flex; align-items: center; justify-content: space-between; padding: 9px 12px; background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.28); border-radius: 8px; font-size: 0.8rem; margin-top: 8px; color: #6ee7b7;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span>⚡</span>
+              <span><strong>Auto-Publish Mode:</strong> Directly save and publish to WorldHeroes after filling without manual approval pause.</span>
+            </div>
+            <label style="display: flex; align-items: center; cursor: pointer; gap: 6px; margin: 0; font-weight: 600; color: #a7f3d0;">
+              <input type="checkbox" id="auto_publish" style="width: 16px; height: 16px; cursor: pointer; accent-color: #10b981;">
+              <span>Auto-Publish</span>
+            </label>
           </div>
 
           <!-- Tabular CSV/XLSX Quick Picker -->
@@ -85,7 +103,7 @@
           {% endif %}
 
           <button id="btn-start-run" class="btn btn-primary" style="width: 100%; margin-top: 14px;" onclick="startRun()">
-            🚀 Start Visible Operator Run
+            🚀 Start Visible Multi-Tab Operator Run
           </button>
         </div>
       </div>
@@ -99,7 +117,7 @@
         <div class="card-body">
           <p style="font-size: 0.85rem; color: #cbd5e1; margin-bottom: 12px; line-height: 1.5;">
             Google Chrome is currently open at <strong>chatgpt.com</strong> awaiting a one-time sign-in.
-            You can log into your account, or bypass login and generate 100% accurate form fields immediately using ForgeX's built-in deep research engine:
+            You can log into your account, or bypass login and generate 100% accurate, publication-grade form fields immediately using ForgeX's built-in deep research engine:
           </p>
           <div style="display: flex; gap: 10px; flex-wrap: wrap;">
             <button class="btn btn-secondary btn-small" onclick="toggleTakeover()">👁 Take Over & Log In (Chrome)</button>
@@ -109,16 +127,32 @@
         </div>
       </div>
 
-      <!-- Human Review & Extracted Fields Panel (shown when ChatGPT finishes) -->
+      <!-- Human Review & Extracted Fields Panel (shown when ready for approval) -->
       <div class="card" id="review-card" style="display: none; border-color: #3b82f6;">
-        <div class="card-header" style="background: rgba(59, 130, 246, 0.1);">
-          <h3 class="card-title" style="color: #60a5fa;">📋 Review Generated Fields</h3>
+        <div class="card-header" style="background: rgba(59, 130, 246, 0.12); display: flex; justify-content: space-between; align-items: center;">
+          <h3 class="card-title" style="color: #60a5fa;">📋 Review High-Density Content</h3>
           <span class="badge" style="background: #3b82f6;">Awaiting Approval</span>
         </div>
         <div class="card-body">
-          <p style="font-size: 0.85rem; color: #94a3b8; margin-bottom: 12px;">
-            The bot filled the target nomination form and paused before final submission. Review the fields below, make any edits, and click <strong>Approve & Submit</strong>.
+          <p style="font-size: 0.85rem; color: #94a3b8; margin-bottom: 14px;">
+            The bot filled the target WorldHeroes form and paused before final submission. Review the comprehensive biographical content below, make any edits, and click <strong>Approve & Publish Live</strong>.
           </p>
+
+          <!-- Photo Preview Container -->
+          <div id="review-photo-container" style="display: none; margin-bottom: 16px; background: #0f172a; padding: 12px; border-radius: 8px; border: 1px solid #334155;">
+            <div style="display: flex; gap: 14px; align-items: center;">
+              <img id="review-photo-img" src="" alt="Hero Portrait" style="width: 72px; height: 86px; object-fit: cover; border-radius: 6px; border: 1px solid #475569; background: #1e293b;">
+              <div style="flex: 1;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                  <span style="font-weight: 600; font-size: 0.9rem; color: #f8fafc;" id="review-photo-title">Hero Portrait Attached</span>
+                  <span class="badge" style="background: #10b981; font-size: 0.7rem;">Status: Published</span>
+                </div>
+                <div style="font-size: 0.78rem; color: #94a3b8; margin-top: 4px;" id="review-photo-credit">Credit: Wikimedia Commons</div>
+                <div style="font-size: 0.72rem; color: #10b981; margin-top: 4px;">✓ Optimized (&lt; 5 MB, 1600px) &amp; Attached to Form</div>
+              </div>
+            </div>
+          </div>
+
           <div class="form-group">
             <label>Full Name</label>
             <input type="text" id="field-name" class="form-control" readonly>
@@ -144,33 +178,53 @@
             </div>
           </div>
           <div class="form-group">
-            <label>One-Line Tagline (max 215)</label>
-            <input type="text" id="field-tagline" class="form-control" maxlength="215">
+            <div style="display: flex; justify-content: space-between;">
+              <label>One-Line Tagline</label>
+              <span id="tagline-len-badge" style="font-size: 0.75rem; color: #94a3b8;">0 / 215</span>
+            </div>
+            <input type="text" id="field-tagline" class="form-control" maxlength="215" oninput="updateFieldCounters()">
           </div>
           <div class="form-group">
-            <label>Summary — Why are they a hero? (max 580)</label>
-            <textarea id="field-summary" class="form-control" rows="3" maxlength="580"></textarea>
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <label>Summary — Why are they a hero?</label>
+              <span id="summary-len-badge" class="badge" style="background: #10b981; font-size: 0.72rem;">0 / 580</span>
+            </div>
+            <textarea id="field-summary" class="form-control" rows="3" maxlength="580" oninput="updateFieldCounters()"></textarea>
           </div>
           <div class="form-group">
-            <label>Detailed Story</label>
-            <textarea id="field-story" class="form-control" rows="5"></textarea>
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <label>Detailed Story — Full Biographical Narrative (5-6 Chapters)</label>
+              <span id="story-len-badge" class="badge" style="background: #6366f1; font-size: 0.72rem;">0 / 7500 chars</span>
+            </div>
+            <textarea id="field-story" class="form-control" rows="7" oninput="updateFieldCounters()"></textarea>
           </div>
           <div class="form-group">
             <label>Authoritative Source URL</label>
             <input type="url" id="field-source" class="form-control">
+          </div>
+
+          <!-- Bottom Action Buttons in Review Card -->
+          <div style="display: flex; gap: 12px; margin-top: 20px; padding-top: 16px; border-top: 1px solid #334155;">
+            <button type="button" class="btn btn-primary" id="btn-review-approve" onclick="approveFromReviewCard()" style="flex: 2; background: #10b981; border-color: #10b981; padding: 11px 18px; font-weight: 700; font-size: 0.95rem; display: flex; align-items: center; justify-content: center; gap: 8px;">
+              <span>🚀</span>
+              <span>Confirm & Publish Live to WorldHeroes</span>
+            </button>
+            <button type="button" class="btn btn-secondary" onclick="sendCommand('reject')" style="flex: 1; color: #ef4444; border-color: #ef4444; padding: 11px 18px; font-weight: 600;">
+              ✕ Reject
+            </button>
           </div>
         </div>
       </div>
 
       <!-- Step Timeline -->
       <div class="card">
-        <div class="card-header">
-          <h3 class="card-title">Agent Execution Timeline</h3>
-          <span id="step-count-badge" class="badge">0 steps</span>
+        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+          <h3 class="card-title">Multi-Tab Execution Timeline</h3>
+          <span id="step-count-badge" class="badge" style="background: #334155;">0 steps</span>
         </div>
         <div class="card-body" id="timeline-container" style="max-height: 480px; overflow-y: auto;">
           <div id="empty-timeline-msg" style="text-align: center; color: #64748b; padding: 30px 0;">
-            No steps executed yet. Launch a run above to watch the agent in real time.
+            No steps executed yet. Launch a run above to watch the agent navigate tabs in real time.
           </div>
           <div class="timeline" id="steps-timeline" style="display: none;"></div>
         </div>
@@ -180,26 +234,69 @@
     <!-- Right Column: Live Browser View & Tabs -->
     <div class="agent-right-col">
       <div class="card live-browser-card">
-        <div class="card-header browser-header">
-          <div class="tab-strip" id="browser-tab-strip">
-            <div class="browser-tab active" id="tab-pill-main">
-              <span class="tab-icon">🌐</span>
-              <span class="tab-title" id="tab-title-main">Google Chrome (Visible)</span>
+        <!-- Browser Top Bar: Chrome Tabs -->
+        <div class="browser-header">
+          <div class="tab-strip-wrapper">
+            <div class="tab-strip" id="browser-tab-strip">
+              <div class="browser-tab active" id="tab-pill-main" onclick="switchActiveTab('tab-main')">
+                <span class="tab-icon">🌐</span>
+                <span class="tab-title" id="tab-title-main">Google Chrome</span>
+                <span class="tab-indicator"></span>
+              </div>
             </div>
           </div>
-          <div class="browser-mode-tag">REAL CHROME</div>
+          <div class="browser-header-right">
+            <span id="tab-counter-badge" class="tab-count-pill">1 TAB OPEN</span>
+            <span class="browser-mode-tag">REAL CHROME</span>
+          </div>
         </div>
+
+        <!-- Chrome Omnibox Address Bar -->
+        <div class="browser-omnibox-bar">
+          <div class="browser-nav-buttons">
+            <button class="nav-btn" title="Back" disabled>‹</button>
+            <button class="nav-btn" title="Forward" disabled>›</button>
+            <button class="nav-btn" title="Reload" onclick="reloadFrame()">↻</button>
+          </div>
+          <div class="omnibox-input-box">
+            <span class="omnibox-lock">🔒</span>
+            <span id="current-url-display" class="omnibox-text">about:blank</span>
+            <button class="omnibox-copy-btn" onclick="copyCurrentUrl()" title="Copy active URL">📋</button>
+          </div>
+          <div id="active-action-pill" class="action-status-pill">
+            <span class="action-status-dot"></span>
+            <span id="action-status-text">Standby</span>
+          </div>
+        </div>
+
+        <!-- Live Action Status Sub-bar -->
+        <div class="live-action-banner" id="live-action-banner">
+          <div class="live-banner-content">
+            <span id="live-banner-icon">🎯</span>
+            <span id="live-banner-text" class="live-banner-text">Waiting for task launch...</span>
+          </div>
+          <div class="live-banner-stats" id="live-banner-stats">
+            <span id="live-stats-chars" style="display: none;">📝 0 chars gathered</span>
+          </div>
+        </div>
+
+        <!-- Live Viewport -->
         <div class="live-viewport" id="viewport-container">
           <div id="no-stream-placeholder" class="viewport-placeholder">
             <div class="placeholder-icon">🖥️</div>
-            <h4>Live Browser Screencast</h4>
-            <p>A real Google Chrome window opens upon starting. Watch the cursor glide and tabs open here in real time.</p>
+            <h4>Live Google Chrome Screencast</h4>
+            <p>A real Google Chrome window opens upon starting. Watch new tabs open for Wikipedia and Google queries, text type, and pointer glide in real time.</p>
           </div>
           <img id="live-screencast-img" class="screencast-frame" style="display: none;" alt="Live View">
         </div>
+
+        <!-- Viewport Footer -->
         <div class="viewport-footer">
-          <span id="current-url-display" style="font-family: monospace; font-size: 0.75rem; color: #94a3b8;">about:blank</span>
-          <span style="font-size: 0.75rem; color: #64748b;">Operator Mode: Active</span>
+          <div style="display: flex; align-items: center; gap: 12px;">
+            <span id="footer-tab-info" style="font-size: 0.75rem; color: #94a3b8;">Active Tab: Google Chrome</span>
+            <span id="footer-chars-info" style="font-size: 0.75rem; color: #10b981; font-weight: 600;">Content: 0 chars</span>
+          </div>
+          <span style="font-size: 0.75rem; color: #64748b;">Visual Pointer Overlay Active</span>
         </div>
       </div>
     </div>
@@ -254,11 +351,24 @@
   letter-spacing: 0.5px;
 }
 .run-status-badge.running { background: #2563eb; color: #ffffff; }
+.run-status-badge.discovering { background: #0284c7; color: #ffffff; }
 .run-status-badge.researching { background: #8b5cf6; color: #ffffff; }
 .run-status-badge.chatgpt { background: #059669; color: #ffffff; }
+.run-status-badge.filling_form { background: #d97706; color: #ffffff; }
 .run-status-badge.waiting { background: #f59e0b; color: #ffffff; }
+.run-status-badge.waiting_approval { background: #f59e0b; color: #ffffff; }
+.run-status-badge.submitting { background: #10b981; color: #ffffff; }
 .run-status-badge.completed { background: #10b981; color: #ffffff; }
 .run-status-badge.failed { background: #ef4444; color: #ffffff; }
+
+@keyframes pulseGlow {
+  0% { box-shadow: 0 0 4px rgba(16, 185, 129, 0.4); transform: scale(1); }
+  50% { box-shadow: 0 0 16px rgba(16, 185, 129, 0.9); transform: scale(1.03); }
+  100% { box-shadow: 0 0 4px rgba(16, 185, 129, 0.4); transform: scale(1); }
+}
+.pulse-glow {
+  animation: pulseGlow 1.4s infinite ease-in-out !important;
+}
 
 .agent-grid {
   display: grid;
@@ -271,44 +381,220 @@
   flex-direction: column;
   gap: 20px;
 }
+
+/* Chrome Browser Mock Card */
 .live-browser-card {
   padding: 0;
   overflow: hidden;
   border: 1px solid #334155;
   background: #0f172a;
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
 }
 .browser-header {
+  background: #182234;
+  border-bottom: 1px solid #283548;
+  padding: 8px 12px 0 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 12px;
+}
+.tab-strip-wrapper {
+  overflow-x: auto;
+  max-width: calc(100% - 150px);
+  scrollbar-width: thin;
+}
+.tab-strip {
+  display: flex;
+  gap: 4px;
+  align-items: flex-end;
+}
+.browser-tab {
+  background: #0b1120;
+  color: #94a3b8;
+  padding: 7px 12px;
+  border-radius: 8px 8px 0 0;
+  font-size: 0.78rem;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid #283548;
+  border-bottom: none;
+  cursor: pointer;
+  white-space: nowrap;
+  max-width: 190px;
+  position: relative;
+  transition: all 0.15s ease-in-out;
+}
+.browser-tab:hover {
   background: #1e293b;
-  border-bottom: 1px solid #334155;
+  color: #f1f5f9;
+}
+.browser-tab.active {
+  background: #0f172a;
+  color: #38bdf8;
+  border-color: #38bdf8 #38bdf8 transparent #38bdf8;
+  font-weight: 600;
+  box-shadow: 0 -2px 8px rgba(56, 189, 248, 0.2);
+}
+.browser-tab .tab-title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 140px;
+}
+.browser-tab .tab-indicator {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: transparent;
+}
+.browser-tab.active .tab-indicator {
+  background: #38bdf8;
+  box-shadow: 0 0 6px #38bdf8;
+}
+.browser-tab.busy .tab-indicator {
+  background: #fbbf24;
+  animation: pulse-dot 1s infinite alternate;
+}
+@keyframes pulse-dot {
+  from { opacity: 0.4; }
+  to { opacity: 1; }
+}
+
+.browser-header-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-bottom: 6px;
+}
+.tab-count-pill {
+  background: rgba(99, 102, 241, 0.2);
+  color: #a5b4fc;
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 4px;
+  border: 1px solid rgba(99, 102, 241, 0.4);
+}
+.browser-mode-tag {
+  background: rgba(37, 99, 235, 0.25);
+  color: #60a5fa;
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 4px;
+  border: 1px solid rgba(37, 99, 235, 0.4);
+}
+
+/* Chrome Omnibox Bar */
+.browser-omnibox-bar {
+  background: #0f172a;
+  padding: 8px 12px;
+  border-bottom: 1px solid #233052;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.browser-nav-buttons {
+  display: flex;
+  gap: 4px;
+}
+.nav-btn {
+  background: transparent;
+  border: none;
+  color: #64748b;
+  font-size: 1.1rem;
+  cursor: pointer;
+  padding: 0 4px;
+  border-radius: 4px;
+}
+.nav-btn:hover:not(:disabled) {
+  color: #cbd5e1;
+  background: #1e293b;
+}
+.omnibox-input-box {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 6px;
+  padding: 5px 10px;
+  font-family: monospace;
+  font-size: 0.78rem;
+}
+.omnibox-lock {
+  font-size: 0.75rem;
+  color: #10b981;
+}
+.omnibox-text {
+  flex: 1;
+  color: #cbd5e1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.omnibox-copy-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 0.75rem;
+  opacity: 0.6;
+  padding: 0 4px;
+}
+.omnibox-copy-btn:hover {
+  opacity: 1;
+}
+.action-status-pill {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 6px;
+  padding: 4px 10px;
+  font-size: 0.75rem;
+  color: #38bdf8;
+  font-weight: 500;
+  white-space: nowrap;
+}
+.action-status-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #38bdf8;
+  box-shadow: 0 0 6px #38bdf8;
+}
+
+/* Live Action Status Banner */
+.live-action-banner {
+  background: #131c31;
+  border-bottom: 1px solid #233052;
   padding: 8px 14px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-}
-.tab-strip {
-  display: flex;
-  gap: 6px;
-}
-.browser-tab {
-  background: #0f172a;
-  color: #cbd5e1;
-  padding: 6px 12px;
-  border-radius: 6px 6px 0 0;
   font-size: 0.8rem;
+}
+.live-banner-content {
   display: flex;
   align-items: center;
-  gap: 6px;
-  border: 1px solid #334155;
-  border-bottom: none;
+  gap: 8px;
+  color: #f1f5f9;
 }
-.browser-mode-tag {
-  background: rgba(37, 99, 235, 0.2);
-  color: #60a5fa;
-  font-size: 0.7rem;
-  font-weight: 700;
-  padding: 2px 6px;
-  border-radius: 4px;
+.live-banner-text {
+  font-weight: 500;
 }
+.live-banner-stats {
+  font-size: 0.75rem;
+  color: #10b981;
+  font-weight: 600;
+}
+
+/* Live Viewport */
 .live-viewport {
   position: relative;
   min-height: 480px;
@@ -333,13 +619,15 @@
   object-fit: contain;
 }
 .viewport-footer {
-  background: #1e293b;
-  border-top: 1px solid #334155;
+  background: #182234;
+  border-top: 1px solid #283548;
   padding: 8px 14px;
   display: flex;
   justify-content: space-between;
   align-items: center;
 }
+
+/* Timeline */
 .timeline {
   display: flex;
   flex-direction: column;
@@ -352,7 +640,13 @@
   padding: 10px 14px;
   border-radius: 8px;
   border-left: 3px solid #3b82f6;
+  transition: all 0.15s ease-in-out;
 }
+.timeline-item.wiki-tab { border-left-color: #38bdf8; }
+.timeline-item.search-tab { border-left-color: #06b6d4; }
+.timeline-item.article-tab { border-left-color: #8b5cf6; }
+.timeline-item.chatgpt-tab { border-left-color: #10b981; }
+.timeline-item.worldheroes-tab { border-left-color: #f59e0b; }
 .timeline-step-badge {
   background: #334155;
   color: #93c5fd;
@@ -365,29 +659,75 @@
 .timeline-content {
   flex: 1;
 }
-.timeline-action {
-  font-size: 0.75rem;
+.timeline-badges {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  margin-bottom: 4px;
+  flex-wrap: wrap;
+}
+.badge-tab {
+  background: rgba(56, 189, 248, 0.18);
+  color: #38bdf8;
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  font-size: 0.68rem;
+  font-weight: 600;
+  padding: 1px 6px;
+  border-radius: 4px;
+}
+.badge-action {
+  font-size: 0.7rem;
   font-family: monospace;
   color: #a78bfa;
-  margin-bottom: 4px;
 }
 .timeline-thought {
   font-size: 0.85rem;
   color: #e2e8f0;
+  line-height: 1.4;
+}
+.timeline-preview-box {
+  margin-top: 6px;
+  padding: 6px 10px;
+  background: rgba(15, 23, 42, 0.7);
+  border-left: 2px solid #06b6d4;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  color: #cbd5e1;
+  font-family: monospace;
+  line-height: 1.4;
+  max-height: 120px;
+  overflow-y: auto;
 }
 .timeline-thumb {
-  width: 50px;
-  height: 35px;
+  width: 55px;
+  height: 40px;
   border-radius: 4px;
   object-fit: cover;
   border: 1px solid #475569;
   cursor: pointer;
+  transition: transform 0.15s;
+}
+.timeline-thumb:hover {
+  transform: scale(1.08);
 }
 </style>
 
 <script>
 let currentRunId = null;
 let eventSource = null;
+let activeTabId = "tab-main";
+let totalCharsGathered = 0;
+
+// Registry of open tabs tracked in Chrome
+const tabsMap = {
+  "tab-main": {
+    id: "tab-main",
+    title: "Google Chrome",
+    icon: "🌐",
+    url: "about:blank",
+    active: true,
+  }
+};
 
 function getCookie(name) {
   let value = `; ${document.cookie}`;
@@ -425,7 +765,8 @@ async function startRun() {
         subject_name: subject,
         work_date: date,
         content_type: contentType,
-        workflow_name: workflow
+        workflow_name: workflow,
+        auto_publish: document.getElementById('auto_publish') ? document.getElementById('auto_publish').checked : false,
       })
     });
 
@@ -441,7 +782,7 @@ async function startRun() {
   } catch (err) {
     alert("Error starting run: " + err.message);
     btn.disabled = false;
-    btn.textContent = "🚀 Start Visible Operator Run";
+    btn.textContent = "🚀 Start Visible Multi-Tab Operator Run";
   }
 }
 
@@ -453,47 +794,163 @@ function initRunUI(runId, subject) {
   document.getElementById('steps-timeline').style.display = 'flex';
   document.getElementById('no-stream-placeholder').style.display = 'none';
   document.getElementById('live-screencast-img').style.display = 'block';
+  document.getElementById('live-banner-stats').style.display = 'block';
+  document.getElementById('live-stats-chars').style.display = 'inline';
 }
 
-function updateTabStrip(step) {
-  const strip = document.getElementById('browser-tab-strip');
-  let tabId = "tab-main";
-  let title = "Google Chrome";
-  let icon = "🌐";
+function updateTabRegistry(step) {
+  const args = step.args || {};
+  let tabId = step.tab_id || args.tab_id;
+  let title = args.tab_title;
+  let icon = args.tab_icon;
+  let url = step.url || args.url || "";
 
-  if (step.action === "discover_hero" || step.action === "hero_discovered") {
-    tabId = "tab-discovery";
-    title = "Date Discovery";
-    icon = "🔍";
-  } else if (step.action === "search_playbook" || step.action === "bundle_ready") {
-    tabId = "tab-google";
-    title = "Google Research";
-    icon = "🔍";
-  } else if (step.action === "chatgpt_handoff" || step.action === "waiting_user" || step.action === "fields_extracted") {
-    tabId = "tab-chatgpt";
-    title = "ChatGPT Web";
-    icon = "🤖";
-  } else if (step.action === "request_approval" || step.action === "submit" || step.action === "finish" || step.action === "admin_login") {
-    tabId = "tab-publish";
-    title = (step.args && step.args.admin_mode) ? "WorldHeroes Admin" : "WorldHeroes Nomination";
-    icon = "⚡";
+  // Derive from action if missing
+  if (!tabId) {
+    if (step.action === "discover_hero" || step.action === "hero_discovered") {
+      tabId = "tab-discover";
+      title = title || "Discover Date";
+      icon = icon || "🔍";
+    } else if (step.action === "copy_content" && (url.includes("wikipedia") || (title && title.includes("Wikipedia")))) {
+      tabId = "tab-wiki";
+      title = title || "Wikipedia";
+      icon = icon || "📖";
+    } else if (tabId === "tab-source" || (title && title.includes("Source:"))) {
+      tabId = "tab-source";
+      title = title || "Primary Source";
+      icon = icon || "📰";
+    } else if (step.action === "search_query" || step.action === "search_playbook") {
+      tabId = "tab-search-main";
+      title = title || "Google Search";
+      icon = icon || "🔍";
+    } else if (step.action === "chatgpt_handoff" || step.action === "waiting_user") {
+      tabId = "tab-chatgpt";
+      title = title || "ChatGPT Web";
+      icon = icon || "🤖";
+    } else if (step.action === "fields_extracted") {
+      tabId = "tab-synthesis";
+      title = title || "Field Synthesis";
+      icon = icon || "✨";
+    } else if (step.action === "open_tab" && (url.includes("worldheros.com") || args.admin_mode)) {
+      tabId = "tab-worldheroes";
+      title = title || "WorldHeroes Admin";
+      icon = icon || "⚡";
+    } else if (step.action === "admin_login" || step.action === "request_approval" || step.action === "submit" || step.action === "finish") {
+      tabId = "tab-worldheroes";
+      title = title || "WorldHeroes Admin";
+      icon = icon || "⚡";
+    } else {
+      tabId = "tab-main";
+      title = title || "Google Chrome";
+      icon = icon || "🌐";
+    }
   }
 
-  let tab = document.getElementById(tabId);
-  if (!tab) {
-    tab = document.createElement('div');
-    tab.id = tabId;
-    tab.className = 'browser-tab';
-    tab.innerHTML = `<span class="tab-icon">${icon}</span><span class="tab-title">${title}</span>`;
-    tab.onclick = () => {
-      document.querySelectorAll('.browser-tab').forEach(t => t.classList.remove('active'));
-      tab.classList.add('active');
+  // Update or insert into map
+  if (!tabsMap[tabId]) {
+    tabsMap[tabId] = {
+      id: tabId,
+      title: title || tabId,
+      icon: icon || "🌐",
+      url: url,
+      active: true,
     };
-    strip.appendChild(tab);
+  } else {
+    if (title) tabsMap[tabId].title = title;
+    if (icon) tabsMap[tabId].icon = icon;
+    if (url) tabsMap[tabId].url = url;
   }
 
-  document.querySelectorAll('.browser-tab').forEach(t => t.classList.remove('active'));
-  tab.classList.add('active');
+  // Set as current active tab
+  activeTabId = tabId;
+  for (const tid in tabsMap) {
+    tabsMap[tid].active = (tid === tabId);
+  }
+
+  // Track gathered chars
+  if (args.chars) {
+    totalCharsGathered += parseInt(args.chars, 10);
+  } else if (args.total_chars) {
+    totalCharsGathered = Math.max(totalCharsGathered, parseInt(args.total_chars, 10));
+  } else if (args.text_preview) {
+    totalCharsGathered += args.text_preview.length;
+  }
+
+  renderTabStrip();
+  updateOmnibox(step);
+}
+
+function renderTabStrip() {
+  const strip = document.getElementById('browser-tab-strip');
+  strip.innerHTML = '';
+
+  const tabList = Object.values(tabsMap);
+  tabList.forEach(t => {
+    const tabEl = document.createElement('div');
+    tabEl.id = t.id;
+    tabEl.className = 'browser-tab' + (t.active ? ' active' : '');
+    tabEl.title = t.title + (t.url ? ' — ' + t.url : '');
+    tabEl.onclick = () => switchActiveTab(t.id);
+    tabEl.innerHTML = `
+      <span class="tab-icon">${t.icon}</span>
+      <span class="tab-title">${t.title}</span>
+      <span class="tab-indicator"></span>
+    `;
+    strip.appendChild(tabEl);
+  });
+
+  const tabCount = tabList.length;
+  document.getElementById('tab-counter-badge').textContent = `${tabCount} ${tabCount === 1 ? 'TAB' : 'TABS'} OPEN`;
+}
+
+function switchActiveTab(tabId) {
+  activeTabId = tabId;
+  for (const tid in tabsMap) {
+    tabsMap[tid].active = (tid === tabId);
+  }
+  renderTabStrip();
+
+  const tab = tabsMap[tabId];
+  if (tab && tab.url) {
+    document.getElementById('current-url-display').textContent = tab.url;
+  }
+  document.getElementById('footer-tab-info').textContent = `Active Tab: ${tab ? tab.title : tabId}`;
+}
+
+function updateOmnibox(step) {
+  const tab = tabsMap[activeTabId] || {};
+  const currentUrl = step.url || tab.url || "about:blank";
+  document.getElementById('current-url-display').textContent = currentUrl;
+
+  // Status Action Pill
+  const actionText = step.action ? step.action.replace(/_/g, ' ').toUpperCase() : "ACTIVE";
+  document.getElementById('action-status-text').textContent = actionText;
+
+  // Live Action Banner
+  const bannerIcon = tab.icon || "🎯";
+  document.getElementById('live-banner-icon').textContent = bannerIcon;
+  document.getElementById('live-banner-text').textContent = step.thought || `Executing ${actionText}`;
+
+  // Stats Counters
+  document.getElementById('live-stats-chars').textContent = `📝 ${totalCharsGathered.toLocaleString()} chars gathered`;
+  document.getElementById('footer-chars-info').textContent = `Content: ${totalCharsGathered.toLocaleString()} chars`;
+  document.getElementById('footer-tab-info').textContent = `Active Tab: ${tab.title || activeTabId}`;
+}
+
+function copyCurrentUrl() {
+  const url = document.getElementById('current-url-display').textContent;
+  if (url && url !== "about:blank") {
+    navigator.clipboard.writeText(url).then(() => {
+      alert("Copied URL to clipboard: " + url);
+    });
+  }
+}
+
+function reloadFrame() {
+  const img = document.getElementById('live-screencast-img');
+  if (img && img.src) {
+    img.src = img.src.split('?')[0] + '?t=' + new Date().getTime();
+  }
 }
 
 function subscribeToSSE(runId) {
@@ -514,11 +971,17 @@ function subscribeToSSE(runId) {
     }
 
     if (data.status === 'WAITING_APPROVAL') {
-      document.getElementById('btn-approve').style.display = 'inline-block';
+      const btnApprove = document.getElementById('btn-approve');
+      btnApprove.style.display = 'inline-block';
+      btnApprove.classList.add('pulse-glow');
       document.getElementById('btn-reject').style.display = 'inline-block';
+      document.getElementById('live-banner-icon').textContent = '✋';
+      document.getElementById('live-banner-text').textContent = 'Form filled successfully! Review content below and click "Confirm & Publish Live" to submit to WorldHeroes.';
       if (data.result) populateReviewFields(data.result);
     } else {
-      document.getElementById('btn-approve').style.display = 'none';
+      const btnApprove = document.getElementById('btn-approve');
+      btnApprove.style.display = 'none';
+      btnApprove.classList.remove('pulse-glow');
       document.getElementById('btn-reject').style.display = 'none';
     }
 
@@ -534,10 +997,8 @@ function subscribeToSSE(runId) {
   eventSource.addEventListener('step', (e) => {
     const step = JSON.parse(e.data);
     addStepToTimeline(step);
-    updateTabStrip(step);
-    if (step.url) {
-      document.getElementById('current-url-display').textContent = step.url;
-    }
+    updateTabRegistry(step);
+
     if (step.action === "hero_discovered" && step.args && step.args.subject_name) {
       document.getElementById('active-run-label').textContent = `Run #${currentRunId}: ${step.args.subject_name}`;
     }
@@ -569,24 +1030,70 @@ function updateStatusBadge(status) {
 function addStepToTimeline(step) {
   const timeline = document.getElementById('steps-timeline');
   const item = document.createElement('div');
-  item.className = 'timeline-item';
+
+  const args = step.args || {};
+  const tabId = step.tab_id || args.tab_id || "tab-main";
+
+  let tabClass = "";
+  if (tabId.includes("wiki")) tabClass = "wiki-tab";
+  else if (tabId.includes("search")) tabClass = "search-tab";
+  else if (tabId.includes("article") || tabId.includes("source")) tabClass = "article-tab";
+  else if (tabId.includes("chatgpt") || tabId.includes("synthesis")) tabClass = "chatgpt-tab";
+  else if (tabId.includes("worldheroes")) tabClass = "worldheroes-tab";
+
+  item.className = 'timeline-item ' + tabClass;
 
   let thumbHtml = '';
   if (step.screenshot_path) {
     thumbHtml = `<img src="/data/${step.screenshot_path}" class="timeline-thumb" onclick="window.open('/data/${step.screenshot_path}')" title="Click to view full screenshot">`;
   }
 
+  const tabTitle = args.tab_title || tabsMap[tabId]?.title || tabId;
+  const tabIcon = args.tab_icon || tabsMap[tabId]?.icon || "🌐";
+
+  let previewHtml = '';
+  if (args.preview || args.text_preview) {
+    const previewText = args.preview || args.text_preview;
+    previewHtml = `<div class="timeline-preview-box">${escapeHtml(previewText.slice(0, 220))}${previewText.length > 220 ? '...' : ''}</div>`;
+  } else if (args.query) {
+    previewHtml = `<div class="timeline-preview-box">Query: "${escapeHtml(args.query)}"</div>`;
+  }
+
   item.innerHTML = `
     <div class="timeline-step-badge">#${step.step_no}</div>
     <div class="timeline-content">
-      <div class="timeline-action">${step.action}</div>
-      <div class="timeline-thought">${step.thought}</div>
+      <div class="timeline-badges">
+        <span class="badge-tab">${tabIcon} ${escapeHtml(tabTitle)}</span>
+        <span class="badge-action">${step.action}</span>
+      </div>
+      <div class="timeline-thought">${escapeHtml(step.thought)}</div>
+      ${previewHtml}
     </div>
     ${thumbHtml}
   `;
   timeline.appendChild(item);
   document.getElementById('timeline-container').scrollTop = document.getElementById('timeline-container').scrollHeight;
   document.getElementById('step-count-badge').textContent = `${step.step_no} steps`;
+}
+
+function escapeHtml(text) {
+  if (!text) return '';
+  return String(text)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
+function updateFieldCounters() {
+  const tagline = document.getElementById('field-tagline').value || '';
+  const summary = document.getElementById('field-summary').value || '';
+  const story = document.getElementById('field-story').value || '';
+
+  document.getElementById('tagline-len-badge').textContent = `${tagline.length} / 215`;
+  document.getElementById('summary-len-badge').textContent = `${summary.length} / 580 chars`;
+  document.getElementById('story-len-badge').textContent = `${story.length.toLocaleString()} / 7,500 chars (Publication-Grade)`;
 }
 
 function populateReviewFields(data) {
@@ -600,6 +1107,24 @@ function populateReviewFields(data) {
   document.getElementById('field-summary').value = data.summary || '';
   document.getElementById('field-story').value = data.story || '';
   document.getElementById('field-source').value = data.source_url || '';
+
+  // Photo preview
+  const photoCont = document.getElementById('review-photo-container');
+  const photoImg = document.getElementById('review-photo-img');
+  const photoCredit = document.getElementById('review-photo-credit');
+  if (photoCont && photoImg) {
+    const cand = (data.candidate_images && data.candidate_images.length > 0) ? data.candidate_images[0] : null;
+    const imgUrl = (cand && (cand.thumb_url || cand.url)) || (data.main_thumbnail || '');
+    if (imgUrl || data.selected_image_path) {
+      photoCont.style.display = 'block';
+      if (imgUrl) photoImg.src = imgUrl;
+      if (photoCredit) {
+        photoCredit.textContent = 'Credit: ' + (data.photo_credit || (cand && cand.attribution) || 'Wikimedia Commons');
+      }
+    }
+  }
+
+  updateFieldCounters();
 }
 
 async function sendCommand(action) {
@@ -633,9 +1158,87 @@ async function sendSynthesizeCommand() {
   }
 }
 
+async function approveFromReviewCard() {
+  if (!currentRunId) return;
+  const btn = document.getElementById('btn-review-approve');
+  if (btn) {
+    btn.disabled = true;
+    btn.innerHTML = '<span>⏳</span><span>Publishing Live to WorldHeroes...</span>';
+  }
+  const payload = {
+    name: document.getElementById('field-name').value,
+    category: document.getElementById('field-category').value,
+    country: document.getElementById('field-country').value,
+    birth: document.getElementById('field-birth').value,
+    death: document.getElementById('field-death').value,
+    tagline: document.getElementById('field-tagline').value,
+    summary: document.getElementById('field-summary').value,
+    story: document.getElementById('field-story').value,
+    source_url: document.getElementById('field-source').value,
+  };
+  try {
+    const res = await fetch(`/api/runs/${currentRunId}/approve`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-csrf-token': getCookie('csrftoken'),
+      },
+      body: JSON.stringify(payload),
+    });
+    if (!res.ok) throw new Error(await res.text());
+    document.getElementById('action-status-text').textContent = 'APPROVED';
+    const topApprove = document.getElementById('btn-approve');
+    if (topApprove) topApprove.style.display = 'none';
+    const topReject = document.getElementById('btn-reject');
+    if (topReject) topReject.style.display = 'none';
+  } catch (err) {
+    alert("Could not approve run: " + err.message);
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = '<span>🚀</span><span>Confirm & Publish Live to WorldHeroes</span>';
+    }
+  }
+}
+
 function toggleTakeover() {
   alert("Take Over mode activated: You can now directly interact with the Chrome window. When finished, return here and click Resume.");
   sendCommand('pause');
 }
+
+// Auto-resume active run on page load
+document.addEventListener('DOMContentLoaded', async () => {
+  const serverActiveRunId = {{ active_run_id | tojson }};
+  const urlParams = new URLSearchParams(window.location.search);
+  const targetRunId = urlParams.get('run_id') || serverActiveRunId;
+
+  if (targetRunId) {
+    currentRunId = parseInt(targetRunId, 10);
+    try {
+      const res = await fetch(`/api/runs/${currentRunId}`);
+      if (res.ok) {
+        const runData = await res.json();
+        initRunUI(currentRunId, runData.subject_name || `Run #${currentRunId}`);
+        updateStatusBadge(runData.status);
+
+        if (runData.steps && runData.steps.length > 0) {
+          runData.steps.forEach(st => {
+            addStepToTimeline(st);
+            updateTabRegistry(st);
+          });
+        }
+        if (runData.status === 'WAITING_APPROVAL' && runData.result) {
+          const btnApprove = document.getElementById('btn-approve');
+          btnApprove.style.display = 'inline-block';
+          btnApprove.classList.add('pulse-glow');
+          document.getElementById('btn-reject').style.display = 'inline-block';
+          populateReviewFields(runData.result);
+        }
+        subscribeToSSE(currentRunId);
+      }
+    } catch (e) {
+      console.warn("Could not auto-resume run:", e);
+    }
+  }
+});
 </script>
 {% endblock %}

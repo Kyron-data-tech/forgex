@@ -17,8 +17,8 @@ Your task is to transform the provided biographical research material into struc
 - "country": Country of origin or primary nationality
 - "birth": 4-digit birth year only (e.g. "1918") or empty string if unknown
 - "death": 4-digit death year only (e.g. "2013") or empty string if alive/unknown
-- "summary": Compelling answer to "Why are they a hero?" (200 to 580 characters). Key achievements and impact.
-- "story": Detailed narrative biography in multiple paragraphs (max 7500 characters). Early life, rise, key achievements, impact, legacy.
+- "summary": Compelling, comprehensive answer to "Why are they a hero?" (350 to 580 characters). Must capture their defining courage, groundbreaking achievements, virtues, and lasting global inspiration.
+- "story": Comprehensive, rich narrative biography in 5 to 6 full structured paragraphs (3,500 to 6,500 characters). Must detail: (1) Heroic stature and historical calling, (2) Early roots, upbringing, and education, (3) Major breakthrough milestones, records, or inventions with specific dates, places, and events, (4) Immense perils, adversity, or skepticism confronted and overcome, (5) Global legacy, honors, awards, and enduring mark on world history. Packed with real facts, names, and milestones.
 - "source_url": The most authoritative source URL found in the research (must start with https://)
 
 ## RESEARCH SOURCE MATERIAL

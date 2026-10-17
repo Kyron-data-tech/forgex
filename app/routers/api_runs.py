@@ -42,6 +42,7 @@ class CreateRunRequest(BaseModel):
     work_date: Optional[str] = None
     content_type: str = "Hero"
     workflow_name: str = "worldheroes"
+    auto_publish: bool = False
 
 
 class BatchRunRequest(BaseModel):
@@ -61,6 +62,15 @@ async def create_run(req: CreateRunRequest, db: AsyncSession = Depends(get_db)):
     content_type = (req.content_type or "Hero").strip()
     is_admin = getattr(settings, "WH_ADMIN_MODE", True)
     action_verb = "directly publish" if is_admin else "nominate"
+
+    # Concurrency safety: mark any previous lingering active runs as STOPPED
+    old_runs_stmt = select(Run).where(
+        Run.status.in_(["RUNNING", "STARTING", "RESEARCHING", "SYNTHESIZING", "FILLING_FORM", "WAITING_APPROVAL", "WAITING_USER"])
+    )
+    lingering_runs = (await db.execute(old_runs_stmt)).scalars().all()
+    for lr in lingering_runs:
+        lr.status = "STOPPED"
+        lr.command = "STOP"
 
     if req.task:
         task_str = req.task
@@ -86,6 +96,8 @@ async def create_run(req: CreateRunRequest, db: AsyncSession = Depends(get_db)):
 
     # Spawn subprocess worker — visible console on Windows so Chrome is interactive
     cmd = [sys.executable, "-m", "app.agent.runner", "--run-id", str(run.id)]
+    if req.auto_publish:
+        cmd.append("--auto-publish")
     try:
         import os
         from app.config import get_admin_credentials
@@ -161,6 +173,7 @@ async def get_run_details(run_id: int, db: AsyncSession = Depends(get_db)):
         "steps": [
             {
                 "step_no": s.step_no,
+                "tab_id": s.tab_id,
                 "thought": s.thought,
                 "action": s.action,
                 "args": s.get_args(),
@@ -215,6 +228,7 @@ async def stream_run_events(run_id: int, db: AsyncSession = Depends(get_db)):
                 last_step_no = step.step_no
                 step_data = {
                     "step_no": step.step_no,
+                    "tab_id": step.tab_id,
                     "thought": step.thought,
                     "action": step.action,
                     "args": step.get_args(),
@@ -282,9 +296,20 @@ async def synthesize_run(run_id: int, db: AsyncSession = Depends(get_db)):
 
 
 @router.post("/{run_id}/approve")
-async def approve_run(run_id: int, db: AsyncSession = Depends(get_db)):
+async def approve_run(run_id: int, payload: Optional[Dict[str, Any]] = None, db: AsyncSession = Depends(get_db)):
     """Explicit human approval enabling final form submission."""
-    await db.execute(update(Run).where(Run.id == run_id).values(command="APPROVE", status="APPROVED"))
+    run_res = await db.execute(select(Run).where(Run.id == run_id))
+    run = run_res.scalar_one_or_none()
+    if not run:
+        raise HTTPException(status_code=404, detail="Run not found.")
+
+    if payload:
+        res = run.get_result()
+        res.update(payload)
+        run.set_result(res)
+
+    run.command = "APPROVE"
+    run.status = "APPROVED"
     await db.commit()
     return {"status": "APPROVED command sent"}
 

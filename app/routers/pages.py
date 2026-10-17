@@ -14,7 +14,7 @@ templates = Jinja2Templates(directory=str(Path(__file__).parent.parent / "templa
 
 @router.get("/")
 async def root_redirect():
-    return RedirectResponse(url="/jobs/new")
+    return RedirectResponse(url="/agent")
 
 @router.get("/settings")
 async def settings_page(request: Request, db: AsyncSession = Depends(get_db)):
@@ -84,12 +84,23 @@ async def agent_dashboard_page(request: Request, db: AsyncSession = Depends(get_
 
     workflows = registry.list_all()
 
+    # Query latest active or waiting approval run to allow seamless page refresh / reconnection
+    from app.models.job import Run
+    stmt = (
+        select(Run)
+        .where(Run.status.in_(["RUNNING", "WAITING_APPROVAL", "WAITING_USER", "FILLING_FORM", "PAUSED", "STARTING"]))
+        .order_by(desc(Run.id))
+        .limit(1)
+    )
+    active_run = (await db.execute(stmt)).scalar_one_or_none()
+
     return templates.TemplateResponse(
         request=request,
         name="agent.html",
         context={
             "workflows": workflows,
             "input_files": input_files,
+            "active_run_id": active_run.id if active_run else None,
             "page_title": "ForgeX Operator Agent — Live Dashboard"
         }
     )

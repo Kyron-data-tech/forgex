@@ -86,11 +86,15 @@ def _clean_html(raw: str) -> str:
 
 
 def _clean_parens(text: str) -> str:
-    """Remove year-only parentheticals like (1920) or (born 1945) from text."""
+    """Remove year-only parentheticals, citations, and normalise whitespace."""
     text = re.sub(r"\s*\([0-9]{1,2}\s+[A-Za-z]+\s+[0-9]{4}\s*[–\-—][^)]*\)", "", text)
     text = re.sub(r"\s*\(born\s+[^)]+\)", "", text, flags=re.IGNORECASE)
     text = re.sub(r"\s*\([0-9]{4}\s*[–\-—][^)]*\)", "", text)
     text = re.sub(r"\s*\([0-9]{4}\)", "", text)
+    # Strip Wikipedia citation brackets like [1], [2], [a], [b]
+    text = re.sub(r"\[(?:[0-9]{1,3}[a-z]?|[a-z])\]", "", text)
+    # Replace non-breaking and zero-width spaces
+    text = re.sub(r"[\u00a0\u200b\u202f]", " ", text)
     return re.sub(r"\s+", " ", text).strip()
 
 
@@ -518,28 +522,28 @@ def _verify_facts(
     death_years: list[str] = []
 
     DATE_RANGE = re.compile(
-        r"\(([0-9]{1,2}\s+[A-Za-z]+\s+[0-9]{4}|[0-9]{4})\s*[–\-—]\s*"
-        r"([0-9]{1,2}\s+[A-Za-z]+\s+[0-9]{4}|[0-9]{4})\)"
+        r"\(\s*(?:born\s+)?([0-9]{1,2}\s+[A-Za-z]+\s+[0-9]{4}|[0-9]{4})\s*[\u2010-\u2015\u2212–\-—]\s*"
+        r"([0-9]{1,2}\s+[A-Za-z]+\s+[0-9]{4}|[0-9]{4})\s*\)"
     )
-    BORN_ONLY = re.compile(r"\(born\s+([^);]+)\)", re.IGNORECASE)
-    BORN_YEAR = re.compile(r"\bborn\s+(?:in\s+)?([0-9]{4})\b", re.IGNORECASE)
-    DIED_YEAR = re.compile(r"\bdied\s+(?:in\s+)?([0-9]{4})\b", re.IGNORECASE)
+    BORN_ONLY = re.compile(r"\(\s*born\s+([^);]+)\)", re.IGNORECASE)
+    BORN_WITH_DATE = re.compile(r"\bborn\s+(?:on\s+|in\s+)?(?:[0-9]{1,2}\s+[A-Za-z]+\s+)?([0-9]{4})\b", re.IGNORECASE)
+    DIED_WITH_DATE = re.compile(r"\bdied\s+(?:on\s+|in\s+)?(?:[0-9]{1,2}\s+[A-Za-z]+\s+)?([0-9]{4})\b", re.IGNORECASE)
 
     for text in all_texts:
-        for m in DATE_RANGE.finditer(text[:2000]):
+        for m in DATE_RANGE.finditer(text[:2500]):
             by = _extract_year(m.group(1))
             dy = _extract_year(m.group(2))
             if by:
                 birth_years.append(by)
             if dy:
                 death_years.append(dy)
-        for m in BORN_ONLY.finditer(text[:1000]):
+        for m in BORN_ONLY.finditer(text[:1500]):
             by = _extract_year(m.group(1))
             if by:
                 birth_years.append(by)
-        for m in BORN_YEAR.finditer(text[:2000]):
+        for m in BORN_WITH_DATE.finditer(text[:2500]):
             birth_years.append(m.group(1))
-        for m in DIED_YEAR.finditer(text[:2000]):
+        for m in DIED_WITH_DATE.finditer(text[:2500]):
             death_years.append(m.group(1))
 
     # Pick most-common year; flag if two different years appear
@@ -620,13 +624,9 @@ def _verify_facts(
 def _infer_category(text: str) -> str:
     """Classify subject into a WorldHeroes category based on vocabulary signals."""
     t = text.lower()
-    # Ordered from most-distinctive → least, to avoid false matches
-    if any(w in t for w in ["scientist", "physicist", "chemist", "biologist",
-                              "mathematician", "astronomer", "researcher", "inventor",
-                              "geologist", "neurologist", "engineer", "computing pioneer"]):
-        return "scientists"
-    # Extreme / action sports must come before general athlete block and before
-    # "historical-heroes" (which captures aviators/stratosphere jumpers otherwise)
+    # 1. Extreme / action sports must come FIRST so skydivers, base jumpers,
+    # and extreme athletes are never falsely classified as scientists (from "scientific mission/study")
+    # or leaders or historical heroes
     if any(w in t for w in [
         "skydiver", "skydiving", "base jump", "base jumping", "extreme sport",
         "extreme sportsman", "daredevil", "freefall", "parachut", "wingsuit",
@@ -638,6 +638,17 @@ def _infer_category(text: str) -> str:
         "marathon runner", "shot put", "hurdler",
     ]):
         return "athletes"
+
+    # 2. Scientists (require specific subject roles or Nobel science prizes)
+    if any(w in t for w in [
+        "physicist", "chemist", "biologist", "mathematician", "astronomer",
+        "nobel prize in physics", "nobel prize in chemistry", "nobel prize in physiology",
+        "computing pioneer", "computer scientist", "geologist", "neurologist",
+        "inventor",
+    ]) or (
+        ("scientist" in t or "researcher" in t or "engineer" in t) and not any(x in t for x in ["skydiver", "daredevil", "stunt", "base jump", "parachut"])
+    ):
+        return "scientists"
     # Humanitarians before artists (activists often described as "authors" too)
     if any(w in t for w in ["humanitarian", "activist", "philanthropist",
                               "relief", "ngo", "peacekeeping", "human rights",
@@ -688,28 +699,29 @@ def _synthesize_tagline(description: str, extract: str, facts: dict) -> str:
 
     tagline = ""
 
-    # Option 1: Wikipedia description primary role
-    if primary and len(primary) > 8:
+    # Option 1: Wikipedia description primary role (excluding birth facts)
+    if primary and len(primary) > 8 and not any(b in primary.lower() for b in ["born to", "born in", "born on"]):
         tagline = primary[0].upper() + primary[1:]
         if not tagline.endswith("."):
             tagline += "."
 
     # Option 2: core role from first extract sentence
-    if not tagline:
+    if not tagline and first:
         m = re.match(
             r"^[A-Z][a-zA-Z\s\.\-]+\s+(?:was|is)\s+(?:an?|the)\s+([^,\.]{10,})",
             first,
         )
         if m:
             core = m.group(1).strip()
-            if len(core) <= MAX_TAGLINE_CHARS - 5:
+            if not any(b in core.lower() for b in ["born to", "born in", "born on"]) and len(core) <= MAX_TAGLINE_CHARS - 5:
                 tagline = core[0].upper() + core[1:]
                 if not tagline.endswith("."):
                     tagline += "."
 
-    # Option 3: first sentence
+    # Option 3: first sentence (only if not a birth sentence)
     if not tagline and first and len(first) <= MAX_TAGLINE_CHARS:
-        tagline = first
+        if not any(b in first.lower() for b in ["was born to", "was born in", "born on", "son of", "daughter of"]):
+            tagline = first
 
     # Fallback
     if not tagline:

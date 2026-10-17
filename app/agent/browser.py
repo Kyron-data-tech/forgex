@@ -107,24 +107,31 @@ class ChromeSession:
             self.profile_dir, self.headless
         )
 
-        try:
-            self._context = await self._playwright.chromium.launch_persistent_context(
-                user_data_dir=str(self.profile_dir),
-                channel=settings.BROWSER_CHANNEL,  # Must be "chrome"
-                headless=self.headless,
-                no_viewport=True,
-                args=launch_args,
-                slow_mo=settings.SLOW_MO_MS,
-                permissions=["clipboard-read", "clipboard-write"],
-            )
-        except Exception as exc:
-            err_msg = str(exc)
-            if "Executable doesn't exist" in err_msg or "channel" in err_msg.lower():
-                raise RuntimeError(
-                    "Google Chrome is not installed or not found on this system. "
-                    "ForgeX strictly requires Google Chrome (channel='chrome') and does not use Chromium."
-                ) from exc
-            raise
+        for attempt in range(2):
+            try:
+                self._context = await self._playwright.chromium.launch_persistent_context(
+                    user_data_dir=str(self.profile_dir),
+                    channel=settings.BROWSER_CHANNEL,  # Must be "chrome"
+                    headless=self.headless,
+                    no_viewport=True,
+                    args=launch_args,
+                    slow_mo=settings.SLOW_MO_MS,
+                    permissions=["clipboard-read", "clipboard-write"],
+                )
+                break
+            except Exception as exc:
+                err_msg = str(exc)
+                if attempt == 0 and ("Target page, context or browser has been closed" in err_msg or "exitCode=21" in err_msg):
+                    logger.warning("Browser profile busy or lock releasing, retrying launch after 0.8s...")
+                    await asyncio.sleep(0.8)
+                    self._clear_stale_locks()
+                    continue
+                if "Executable doesn't exist" in err_msg or "channel" in err_msg.lower():
+                    raise RuntimeError(
+                        "Google Chrome is not installed or not found on this system. "
+                        "ForgeX strictly requires Google Chrome (channel='chrome') and does not use Chromium."
+                    ) from exc
+                raise
 
         # Verify browser version and reject Chromium
         pages = self._context.pages

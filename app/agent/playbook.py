@@ -29,10 +29,10 @@ from app.agent.tools import ToolExecutor
 logger = logging.getLogger("forgex.playbook")
 
 DEFAULT_QUERY_TEMPLATES = [
-    "{name} biography",
-    "{name} achievements and awards",
-    "{name} early life background",
-    "{name} legacy and impact",
+    "{name} biography early life career",
+    "{name} major achievements records awards breakthroughs",
+    "{name} why is a hero legacy impact historical significance",
+    "{name} historic milestones obstacles overcome",
 ]
 
 SKIP_DOMAINS = {
@@ -140,11 +140,22 @@ class ResearchPlaybook:
 
         await self._handle_google_consent(tab_page)
 
+        tab_id = f"tab-google-{search_idx}"
+        clean_q = query[:28] + "..." if len(query) > 28 else query
+        tab_title = f"Google: {clean_q}"
+
         if on_step:
             await on_step(
-                f"Search {search_idx}: Opened Google tab for '{query}'",
+                f"Search Tab {search_idx}: Opened Google Chrome tab for '{query}'",
                 "open_tab",
-                {"query": query, "tab_idx": search_idx},
+                {
+                    "query": query,
+                    "tab_idx": search_idx,
+                    "tab_id": tab_id,
+                    "tab_title": tab_title,
+                    "tab_icon": "🔍",
+                    "url": search_engine_url,
+                },
                 tab_page,
             )
 
@@ -182,9 +193,15 @@ class ResearchPlaybook:
 
         if on_step:
             await on_step(
-                f"Search {search_idx}: Submitted query '{query}'",
+                f"Search Tab {search_idx}: Submitted query '{query}' in Chrome",
                 "search_query",
-                {"query": query},
+                {
+                    "query": query,
+                    "tab_id": tab_id,
+                    "tab_title": tab_title,
+                    "tab_icon": "🔍",
+                    "url": tab_page.url,
+                },
                 tab_page,
             )
 
@@ -218,9 +235,15 @@ class ResearchPlaybook:
 
             if on_step and ai_overview_text:
                 await on_step(
-                    f"Search {search_idx}: Highlighted & copied AI Overview ({len(ai_overview_text)} chars)",
+                    f"Search Tab {search_idx}: Extracted AI Overview ({len(ai_overview_text)} characters)",
                     "copy_ai_overview",
-                    {"text_preview": ai_overview_text[:120]},
+                    {
+                        "text_preview": ai_overview_text[:120],
+                        "tab_id": tab_id,
+                        "tab_title": tab_title,
+                        "tab_icon": "🔍",
+                        "url": tab_page.url,
+                    },
                     tab_page,
                 )
 
@@ -234,23 +257,33 @@ class ResearchPlaybook:
                     ai_overview_text = copy_res.get("full_text") or self.executor.last_copied_text or copy_res.get("preview", "")
                     if on_step and ai_overview_text:
                         await on_step(
-                            f"Search {search_idx}: Copied featured snippet ({len(ai_overview_text)} chars)",
+                            f"Search Tab {search_idx}: Copied featured snippet ({len(ai_overview_text)} chars)",
                             "copy_snippet",
-                            {"text_preview": ai_overview_text[:120]},
+                            {
+                                "text_preview": ai_overview_text[:120],
+                                "tab_id": tab_id,
+                                "tab_title": tab_title,
+                                "tab_icon": "🔍",
+                                "url": tab_page.url,
+                            },
                             tab_page,
                         )
                     break
 
-        # 5. Extract top 1-2 organic result links
+        # 5. Extract top organic result links
         organic_links: List[Dict[str, str]] = []
         try:
-            # Query all anchor links under search results
-            anchors = tab_page.locator("a[href]")
-            count = await anchors.count()
-            for i in range(min(count, 40)):
-                href = await anchors.nth(i).get_attribute("href")
+            # Query organic anchors from search results
+            result_anchors = tab_page.locator("#search a[href], #rso a[href], a:has(h3), a[data-ved][href]")
+            count = await result_anchors.count()
+            if count == 0:
+                result_anchors = tab_page.locator("a[href]")
+                count = await result_anchors.count()
+
+            for i in range(min(count, 50)):
+                href = await result_anchors.nth(i).get_attribute("href")
                 if href and self._is_allowed_organic_link(href):
-                    title = await anchors.nth(i).inner_text()
+                    title = await result_anchors.nth(i).inner_text()
                     title = title.strip().split("\n")[0]
                     if len(title) > 5 and not any(o["url"] == href for o in organic_links):
                         organic_links.append({"url": href, "title": title})
@@ -263,6 +296,8 @@ class ResearchPlaybook:
         organic_articles: List[Dict[str, str]] = []
         for org_idx, org in enumerate(organic_links, start=1):
             org_url = org["url"]
+            art_tab_id = f"tab-art-{search_idx}-{org_idx}"
+            art_title = f"Article: {org['title'][:25]}..."
             logger.info("Visiting organic result [%d]: %s", org_idx, org_url)
 
             try:
@@ -275,9 +310,15 @@ class ResearchPlaybook:
 
                 if on_step:
                     await on_step(
-                        f"Search {search_idx}: Opened article '{org['title']}'",
+                        f"Opened article in new tab: '{org['title']}'",
                         "read_article",
-                        {"url": org_url, "title": org["title"]},
+                        {
+                            "url": org_url,
+                            "title": org["title"],
+                            "tab_id": art_tab_id,
+                            "tab_title": art_title,
+                            "tab_icon": "📰",
+                        },
                         org_page,
                     )
 
@@ -345,23 +386,211 @@ class ResearchPlaybook:
         subject_name: str,
         work_date: str = "",
         notes: str = "",
+        content_type: str = "Hero",
         max_searches: Optional[int] = None,
         search_engine_url: str = "https://www.google.com",
         on_step: Optional[Any] = None,
         close_search_tabs: bool = False,
     ) -> Dict[str, Any]:
         """
-        Executes the full research playbook for a subject:
-          - Runs 3–4 Google searches across distinct angles
-          - Compiles AI Overviews and organic articles
-          - Produces unified de-duplicated research bundle
+        Executes the full multi-tab research playbook for a subject:
+          - Tab 1: Live Wikipedia biography tab (disambiguation-safe title, sections, ext links)
+          - Tab 2: Live authoritative primary source tab (Britannica, NobelPrize, etc.)
+          - Tab 3: Google search queries for milestones and AI Overviews
+          - Full cross-validation and factual synthesis via ResearchService (from New Job engine)
         """
+        import urllib.parse
+        wiki_results = []
+        authoritative_results = []
+        verified_profile = {}
+        wiki_title = subject_name
+
+        # -------------------------------------------------------------
+        # Stage 0: Disambiguation-safe title resolution & Wikipedia Tab
+        # -------------------------------------------------------------
+        if not search_engine_url.startswith("file:"):
+            try:
+                import httpx
+                from app.services.research import WikipediaSource, ResearchService, _domain_of, TRUSTED_DOMAINS
+
+                async with httpx.AsyncClient(headers={"User-Agent": "ForgeX/1.0"}, timeout=8.0) as client:
+                    resolved = await WikipediaSource().find_title(f"{subject_name} biography", client)
+                    if resolved:
+                        wiki_title = resolved
+                        logger.info("[Playbook] Resolved canonical Wikipedia title: %r", wiki_title)
+            except Exception as e:
+                logger.debug("Wikipedia title search note: %s", e)
+
+            # Tab 1: Live Wikipedia Biography Tab
+            ext_links: List[str] = []
+            try:
+                wiki_url = f"https://en.wikipedia.org/wiki/{urllib.parse.quote(wiki_title.replace(' ', '_'))}"
+                logger.info("[Playbook] Opening dedicated Wikipedia tab: %s", wiki_url)
+
+                wiki_page = await self.session.open_tab(
+                    url=wiki_url,
+                    purpose="wikipedia_biography",
+                    step_no=1,
+                )
+                await wiki_page.bring_to_front()
+                await asyncio.sleep(1.2)
+
+                if on_step:
+                    await on_step(
+                        f"Research Tab 1: Opened live Wikipedia biography for '{wiki_title}'",
+                        "open_tab",
+                        {
+                            "tab_id": "tab-wiki",
+                            "tab_title": f"Wikipedia: {wiki_title}",
+                            "tab_icon": "📖",
+                            "url": wiki_page.url,
+                            "subject": wiki_title,
+                        },
+                        wiki_page,
+                    )
+
+                # Smoothly scroll down with pointer reading Wikipedia sections
+                await self.pointer.scroll(
+                    wiki_page, delta_y=550, steps=8, label=f"Reading Wikipedia biography for {wiki_title}..."
+                )
+                await asyncio.sleep(0.4)
+
+                # Extract rich text and external links from live Wikipedia page
+                wiki_data = await wiki_page.evaluate("""() => {
+                    const stripTags = ['script', 'style', 'nav', 'table.navbox', '.mw-jump-link', '.mw-editsection', 'noscript'];
+                    stripTags.forEach(t => document.querySelectorAll(t).forEach(el => el.remove()));
+                    const content = document.querySelector('#mw-content-text');
+                    if (!content) return { text: document.body.innerText, ext_links: [] };
+                    const paras = content.querySelectorAll('p, h2, h3, li, blockquote');
+                    const textChunks = [];
+                    paras.forEach(p => {
+                        const t = (p.innerText || '').trim();
+                        if (t.length > 25 && !t.startsWith('^') && !t.startsWith('[')) {
+                            textChunks.push(t);
+                        }
+                    });
+                    const ext_links = [];
+                    const links = content.querySelectorAll('a[href^="http"]');
+                    links.forEach(a => {
+                        const h = a.href || '';
+                        if (!h.includes('wikipedia.org') && !h.includes('wikimedia.org') && !h.includes('wikidata.org')) {
+                            ext_links.push(h);
+                        }
+                    });
+                    return { text: textChunks.join('\\n\\n'), ext_links: ext_links };
+                }""")
+
+                clean_wiki = re.sub(r"\\s+", " ", (wiki_data or {}).get("text", "")).strip()
+                ext_links = (wiki_data or {}).get("ext_links", [])
+                if len(clean_wiki) > 250:
+                    wiki_results.append({
+                        "url": wiki_page.url,
+                        "title": f"Wikipedia: {wiki_title}",
+                        "text": clean_wiki[:8000],
+                    })
+                    if on_step:
+                        await on_step(
+                            f"Extracted {len(clean_wiki[:8000])} characters of verified biography and milestones from Wikipedia",
+                            "copy_content",
+                            {
+                                "tab_id": "tab-wiki",
+                                "tab_title": f"Wikipedia: {wiki_title}",
+                                "tab_icon": "📖",
+                                "url": wiki_page.url,
+                                "chars": len(clean_wiki[:8000]),
+                                "preview": clean_wiki[:160],
+                            },
+                            wiki_page,
+                        )
+
+                # Tab 2: Authoritative Primary Source Live Tab (from TRUSTED_DOMAINS)
+                top_source_url = None
+                from app.services.research import TRUSTED_DOMAINS, _domain_of
+                for trusted in TRUSTED_DOMAINS:
+                    for lk in ext_links:
+                        if trusted in lk.lower():
+                            top_source_url = lk
+                            break
+                    if top_source_url:
+                        break
+
+                if not top_source_url and len(ext_links) > 0:
+                    # Pick first high-reputation external reference
+                    top_source_url = ext_links[0]
+
+                if top_source_url:
+                    try:
+                        source_domain = _domain_of(top_source_url)
+                        logger.info("[Playbook] Opening live primary source tab: %s", top_source_url)
+                        source_page = await self.session.open_tab(
+                            url=top_source_url,
+                            purpose="primary_source",
+                            step_no=2,
+                        )
+                        await source_page.bring_to_front()
+                        await asyncio.sleep(1.0)
+
+                        if on_step:
+                            await on_step(
+                                f"Research Tab 2: Opened authoritative primary source ({source_domain})",
+                                "open_tab",
+                                {
+                                    "tab_id": "tab-source",
+                                    "tab_title": f"Source: {source_domain}",
+                                    "tab_icon": "📰",
+                                    "url": source_page.url,
+                                },
+                                source_page,
+                            )
+
+                        await self.pointer.scroll(
+                            source_page, delta_y=450, steps=6, label=f"Reading verified source from {source_domain}..."
+                        )
+                        await asyncio.sleep(0.4)
+
+                        source_text = await source_page.evaluate("""() => {
+                            const strip = ['script', 'style', 'nav', 'header', 'footer', 'noscript'];
+                            strip.forEach(s => document.querySelectorAll(s).forEach(e => e.remove()));
+                            const main = document.querySelector('article, main, .article-content, #content, .topic-paragraph') || document.body;
+                            return main ? main.innerText.slice(0, 5000) : '';
+                        }""")
+
+                        clean_source = re.sub(r"\\s+", " ", source_text or "").strip()
+                        if len(clean_source) > 150:
+                            authoritative_results.append({
+                                "url": source_page.url,
+                                "title": f"Source: {source_domain}",
+                                "text": clean_source[:5000],
+                            })
+                            if on_step:
+                                await on_step(
+                                    f"Extracted {len(clean_source[:4000])} characters of primary source facts from {source_domain}",
+                                    "copy_content",
+                                    {
+                                        "tab_id": "tab-source",
+                                        "tab_title": f"Source: {source_domain}",
+                                        "tab_icon": "📰",
+                                        "url": source_page.url,
+                                        "chars": len(clean_source[:4000]),
+                                        "preview": clean_source[:160],
+                                    },
+                                    source_page,
+                                )
+                    except Exception as s_err:
+                        logger.warning("Could not complete live primary source tab: %s", s_err)
+
+            except Exception as w_err:
+                logger.warning("Could not execute Wikipedia tab deep dive: %s", w_err)
+
+        # -------------------------------------------------------------
+        # Stage 1: Google Search Tabs (Achievements, Breakthroughts)
+        # -------------------------------------------------------------
         num_searches = max_searches or settings.SEARCHES_PER_SUBJECT
         templates = DEFAULT_QUERY_TEMPLATES[:num_searches]
 
         raw_results = []
         for idx, tmpl in enumerate(templates, start=1):
-            query = tmpl.format(name=subject_name)
+            query = tmpl.format(name=wiki_title or subject_name)
             res = await self.execute_search_query(
                 query,
                 search_idx=idx,
@@ -373,15 +602,37 @@ class ResearchPlaybook:
 
             # Realistic human pacing between searches (unless mock/test mode)
             if idx < len(templates) and not search_engine_url.startswith("file:"):
-                pause_s = random.uniform(3.0, 6.0)
+                pause_s = random.uniform(2.5, 4.0)
                 await asyncio.sleep(pause_s)
 
         # -------------------------------------------------------------
-        # Merge & Synthesize Research Bundle
+        # Stage 2: Run New Job's Proven ResearchService Engine
+        # -------------------------------------------------------------
+        if not search_engine_url.startswith("file:"):
+            try:
+                from app.services.research import ResearchService
+                rs = ResearchService()
+                logger.info("[Playbook] Executing ResearchService cross-verification for %r...", wiki_title or subject_name)
+                verified_profile = await rs.research(
+                    subject=wiki_title or subject_name,
+                    content_type=content_type,
+                    work_date=work_date,
+                )
+                logger.info(
+                    "[Playbook] ResearchService succeeded: title=%r category=%r facts=%s",
+                    verified_profile.get("title"),
+                    verified_profile.get("category"),
+                    verified_profile.get("facts"),
+                )
+            except Exception as r_err:
+                logger.warning("[Playbook] ResearchService note: %s", r_err)
+
+        # -------------------------------------------------------------
+        # Stage 3: Merge & Synthesize Research Bundle
         # -------------------------------------------------------------
         bundle_parts: List[str] = [
-            f"=== RESEARCH BUNDLE FOR: {subject_name.upper()} ===",
-            f"Subject Name: {subject_name}",
+            f"=== RESEARCH BUNDLE FOR: {(wiki_title or subject_name).upper()} ===",
+            f"Subject Name: {wiki_title or subject_name}",
         ]
         if work_date:
             bundle_parts.append(f"Specified Event / Achievement Year: {work_date}")
@@ -392,7 +643,43 @@ class ResearchPlaybook:
         seen_sentences = set()
         sources_list: List[Dict[str, str]] = []
 
-        # 1. Prioritize AI Overviews
+        # Verified facts summary from New Job engine
+        if verified_profile and verified_profile.get("facts"):
+            v_facts = verified_profile["facts"]
+            bundle_parts.append("--- [VERIFIED HISTORICAL FACTS (CROSS-VALIDATED)] ---")
+            bundle_parts.append(f"Standardized Name: {verified_profile.get('title', subject_name)}")
+            bundle_parts.append(f"WorldHeroes Category: {verified_profile.get('category', 'historical-heroes')}")
+            if v_facts.get("birth"):
+                bundle_parts.append(f"Verified Birth Year: {v_facts.get('birth')}")
+            if v_facts.get("death"):
+                bundle_parts.append(f"Verified Death Year: {v_facts.get('death')}")
+            if v_facts.get("nationality"):
+                bundle_parts.append(f"Verified Country/Nationality: {v_facts.get('nationality')}")
+            if verified_profile.get("tagline"):
+                bundle_parts.append(f"Verified Tagline: {verified_profile.get('tagline')}")
+            if verified_profile.get("summary"):
+                bundle_parts.append(f"Verified Summary: {verified_profile.get('summary')}")
+            bundle_parts.append("")
+
+        # 0. Wikipedia Structured Biography (from Live Tab 1)
+        if wiki_results:
+            bundle_parts.append("--- [SOURCE: WIKIPEDIA BIOGRAPHY & ACHIEVEMENTS] ---")
+            for w in wiki_results:
+                sources_list.append({"url": w["url"], "title": w["title"]})
+                bundle_parts.append(f"Wikipedia Page: {w['title']} ({w['url']})")
+                bundle_parts.append(w["text"])
+                bundle_parts.append("")
+
+        # 1. Authoritative Primary Sources (from Live Tab 2)
+        if authoritative_results:
+            bundle_parts.append("--- [SOURCE: AUTHORITATIVE PRIMARY SOURCES] ---")
+            for a in authoritative_results:
+                sources_list.append({"url": a["url"], "title": a["title"]})
+                bundle_parts.append(f"Source: {a['title']} ({a['url']})")
+                bundle_parts.append(a["text"])
+                bundle_parts.append("")
+
+        # 2. Google AI Overviews
         bundle_parts.append("--- [SOURCE: GOOGLE AI OVERVIEWS & SNIPPETS] ---")
         ai_count = 0
         for r in raw_results:
@@ -403,7 +690,7 @@ class ResearchPlaybook:
                 bundle_parts.append(ai_text)
                 bundle_parts.append("")
 
-        # 2. Organic Article Content
+        # 3. Organic Article Content
         bundle_parts.append("--- [SOURCE: VERIFIED WEB ARTICLES] ---")
         org_count = 0
         for r in raw_results:
@@ -411,7 +698,6 @@ class ResearchPlaybook:
                 org_count += 1
                 sources_list.append({"url": art["url"], "title": art["title"]})
                 bundle_parts.append(f"Article: {art['title']} ({art['url']})")
-                # Deduplicate sentences
                 sents = re.split(r"(?<=[.!?])\s+", art["text"])
                 unique_sents = []
                 for s in sents:
@@ -429,13 +715,14 @@ class ResearchPlaybook:
             merged_text = merged_text[: settings.MAX_PASTE_CHARS - 100].rsplit(".", 1)[0] + "."
 
         return {
-            "subject_name": subject_name,
+            "subject_name": wiki_title or subject_name,
             "bundle_text": merged_text,
             "sources": sources_list,
             "ai_overview_count": ai_count,
             "organic_count": org_count,
             "total_searches": len(raw_results),
             "raw_searches": raw_results,
+            "verified_profile": verified_profile,
         }
 
     def resolve_hero_from_date(self, date_str: str, google_snippet: str = "") -> Dict[str, Any]:
